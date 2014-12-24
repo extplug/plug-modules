@@ -1,0 +1,5 @@
+{
+  "name": "plug-modules",
+  "version": "0.2.0",
+  "description": "Retroactively add reasonable module definition paths to plug.dj."
+}
