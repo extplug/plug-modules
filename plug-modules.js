@@ -45,7 +45,7 @@ var eventModule = function (name) {
  */
 var commandModule = function (method, url) {
   return function (m) {
-    return _.isFunction(m) && functionContains(m.prototype.execute, '.execute("' + method.toUpperCase()) &&
+    return m.prototype && functionContains(m.prototype.execute, '.execute("' + method.toUpperCase()) &&
       functionContains(m.prototype.execute, url);
   };
 };
@@ -144,6 +144,77 @@ var todo = function () {
  * This is quite brittle because Plug.DJ can change their internals at any given moment :'
  */
 var plugModules = {
+
+  'plug/actions/Action': function (m) {
+    return m.prototype && _.isFunction(m.prototype.alert) && _.isFunction(m.prototype.permissionAlert);
+  },
+  'plug/actions/actionQueue': function (m) {
+    return _.isArray(m.queue) && _.isFunction(m.add) && _.isFunction(m.append) &&
+      _.isFunction(m.next) && _.isFunction(m.complete);
+  },
+
+  'plug/actions/auth/AuthResetAction': commandModule('POST', 'auth/reset/me'),
+  'plug/actions/auth/AuthTokenAction': commandModule('GET', 'auth/token'),
+  'plug/actions/auth/FacebookAuthAction': commandModule('POST', 'auth/facebook'),
+  'plug/actions/auth/KillSessionAction': commandModule('DELETE', 'auth/session'),
+  'plug/actions/bans/BanAction': commandModule('POST', 'bans/add'),
+  'plug/actions/bans/ListBansAction': commandModule('GET', 'bans'),
+  'plug/actions/bans/UnbanAction': commandModule('DELETE', 'bans/'),
+  'plug/actions/booth/JoinWaitlistAction': commandModule('POST', 'booth'),
+  'plug/actions/booth/LeaveWaitlistAction': commandModule('DELETE', 'booth'),
+  'plug/actions/booth/ModerateAddDJAction': commandModule('POST', 'booth/add'),
+  'plug/actions/booth/ModerateForceSkipAction': commandModule('POST', 'booth/skip'),
+  'plug/actions/booth/ModerateRemoveDJAction': commandModule('DELETE', 'booth/remove/'),
+  'plug/actions/booth/SkipTurnAction': commandModule('POST', 'booth/skip/me'),
+  'plug/actions/friends/BefriendAction': commandModule('POST', 'friends'),
+  'plug/actions/friends/UnfriendAction': commandModule('DELETE', 'friends/'),
+  'plug/actions/ignores/IgnoreAction': commandModule('POST', 'ignores'),
+  'plug/actions/ignores/UnignoreAction': commandModule('DELETE', 'ignores/'),
+  'plug/actions/ignores/IgnoresListAction': commandModule('GET', 'ignores'),
+  'plug/actions/media/ListMediaAction': commandModule('GET', 'playlists/'),
+  'plug/actions/media/MediaDeleteAction': commandModule('POST', 'playlists/"+this.id+"/media/delete'),
+  'plug/actions/media/MediaGrabAction': commandModule('POST', 'grabs'),
+  'plug/actions/media/MediaInsertAction': commandModule('POST', 'playlists/"+this.id+"/media/insert'),
+  'plug/actions/media/MediaMoveAction': commandModule('PUT', 'playlists/"+this.id+"/media/move'),
+  'plug/actions/media/MediaUpdateAction': commandModule('PUT', 'playlists/"+this.id+"/media/update'),
+  'plug/actions/media/SearchPlaylistsAction': commandModule('GET', 'playlists/media?q='),
+  'plug/actions/mutes/MuteAction': commandModule('POST', 'mutes'),
+  'plug/actions/mutes/MutesListAction': commandModule('GET', 'mutes'),
+  'plug/actions/news/NewsListAction': commandModule('GET', 'news'),
+  'plug/actions/notifications/NotificationReadAction': commandModule('DELETE', 'notifications/'),
+  'plug/actions/playlists/ListPlaylistsAction': commandModule('GET', 'playlists'),
+  'plug/actions/playlists/PlaylistActivateAction': commandModule('PUT', 'playlists/"+this.data+"/activate'),
+  'plug/actions/playlists/PlaylistCreateAction': commandModule('POST', 'playlists'),
+  'plug/actions/playlists/PlaylistDeleteAction': commandModule('DELETE', 'playlists/'),
+  'plug/actions/playlists/PlaylistRenameAction': commandModule('PUT', 'playlists/"+this.id+"/rename'),
+  'plug/actions/playlists/PlaylistShuffleAction': commandModule('PUT', 'playlists/"+this.data+"/shuffle'),
+  'plug/actions/profile/SetBlurbAction': commandModule('PUT', 'profile/blurb'),
+  'plug/actions/rooms/ListFavoritesAction': commandModule('GET', 'rooms/favorites'),
+  'plug/actions/rooms/ListMyRoomsAction': commandModule('GET', 'rooms/me'),
+  'plug/actions/rooms/ListRoomsAction': commandModule('GET', 'rooms'),
+  'plug/actions/rooms/ModerateDeleteChatAction': commandModule('DELETE', 'chat/"+this.data'),
+  'plug/actions/rooms/RoomCreateAction': commandModule('POST', 'rooms'),
+  'plug/actions/rooms/RoomFavoriteAction': commandModule('POST', 'rooms/favorites'),
+  'plug/actions/rooms/RoomHistoryAction': commandModule('GET', 'rooms/history'),
+  'plug/actions/rooms/RoomJoinAction': commandModule('POST', 'rooms/join'),
+  'plug/actions/rooms/RoomStateAction': commandModule('GET', 'rooms/state'),
+  'plug/actions/rooms/RoomUnfavoriteAction': commandModule('DELETE', 'rooms/favorites'),
+  'plug/actions/rooms/RoomUpdateAction': commandModule('POST', 'rooms/update'),
+  'plug/actions/rooms/RoomValidateAction': commandModule('GET', 'rooms/validate'),
+  'plug/actions/rooms/VoteAction': commandModule('POST', 'votes'),
+  'plug/actions/staff/StaffListAction': commandModule('GET', 'staff'),
+  'plug/actions/staff/StaffRemoveAction': commandModule('DELETE', 'staff/'),
+  'plug/actions/staff/StaffUpdateAction': commandModule('POST', 'staff/update'),
+  'plug/actions/store/AvatarPurchaseAction': commandModule('POST', 'store/purchase'),
+  'plug/actions/store/ProductsAction': commandModule('GET', 'store/products'),
+  'plug/actions/store/InventoryAction': commandModule('GET', 'store/inventory'),
+  'plug/actions/user/SetStatusAction': commandModule('PUT', 'users/status'),
+  'plug/actions/user/SetLanguageAction': commandModule('PUT', 'users/language'),
+  'plug/actions/user/SetAvatarAction': commandModule('PUT', 'users/avatar'),
+  'plug/actions/user/MeAction': commandModule('GET', '"users/me"'),
+  'plug/actions/user/UserHistoryAction': commandModule('GET', 'users/me/history'),
+  'plug/actions/user/UserFindAction': commandModule('GET', 'users/"+this.data'),
+  'plug/actions/user/BulkFindAction': commandModule('GET', 'users/bulk'),
 
   'plug/core/EventManager': function (m) {
     return _.isObject(m.eventTypeMap) && _.isObject(m.commandClassMap._map);
@@ -290,35 +361,6 @@ var plugModules = {
     return m instanceof Backbone.Collection && _.isFunction(m.onPointsChange);
   },
 
-  'plug/actions/Action': function (m) {
-    return m.prototype && _.isFunction(m.prototype.alert) && _.isFunction(m.prototype.permissionAlert);
-  },
-  'plug/actions/ActionQueue': function (m) {
-    return _.isArray(m.queue) && _.isFunction(m.add) && _.isFunction(m.append) &&
-      _.isFunction(m.next) && _.isFunction(m.complete);
-  },
-  'plug/actions/profile/SetBlurbAction': commandModule('PUT', 'profile/blurb'),
-  'plug/actions/user/SetStatusAction': commandModule('PUT', 'users/status'),
-  'plug/actions/user/SetLanguageAction': commandModule('PUT', 'users/language'),
-  'plug/actions/user/SetAvatarAction': commandModule('PUT', 'users/avatar'),
-  'plug/actions/user/MeAction': commandModule('GET', '"users/me"'),
-  'plug/actions/user/UserHistoryAction': commandModule('GET', 'users/me/history'),
-  'plug/actions/user/UserFindAction': commandModule('GET', 'users/"+this.data'),
-  'plug/actions/user/BulkFindAction': commandModule('GET', 'users/bulk'),
-  'plug/actions/store/AvatarPurchaseAction': commandModule('POST', 'store/purchase'),
-  'plug/actions/store/ProductsAction': commandModule('GET', 'store/products'),
-  'plug/actions/store/InventoryAction': commandModule('GET', 'store/inventory'),
-  'plug/actions/staff/StaffListAction': commandModule('GET', 'staff'),
-  'plug/actions/staff/StaffRemoveAction': commandModule('DELETE', 'staff/'),
-  'plug/actions/staff/StaffUpdateAction': commandModule('POST', 'staff/update'),
-  'plug/actions/notifications/NotificationDeleteAction': commandModule('DELETE', 'notifications/'),
-  'plug/actions/news/NewsListAction': commandModule('GET', 'news'),
-  'plug/actions/mutes/MuteAction': commandModule('POST', 'mutes'),
-  'plug/actions/mutes/MutesListAction': commandModule('GET', 'mutes'),
-  'plug/actions/ignores/IgnoreAction': commandModule('POST', 'ignores'),
-  'plug/actions/ignores/UnignoreAction': commandModule('DELETE', 'ignores/'),
-  'plug/actions/ignores/IgnoresListAction': commandModule('GET', 'ignores'),
-
   // application views
   'plug/views/app/ApplicationView': function (m) {
     return m.prototype && m.prototype.el === 'body' && _.isFunction(m.prototype.showRoom);
@@ -458,8 +500,16 @@ var plugModules = {
     return isView(m) && m.prototype.id === 'the-user-profile';
   },
   // Other user profiles? (On the profile pages?)
-  'plug/views/user/profile/???ProfileView': function (m) {
+  'plug/views/user/profile/UnusedProfileView': function (m) {
     return isView(m) && m.prototype.id === 'user-profile';
+  },
+
+  'plug/views/user/menu/UserMenuView': function (m) {
+    return isView(m) && m.prototype.id === 'user-menu';
+  },
+
+  'plug/views/user/history/UserHistoryView': function (m) {
+    return isView(m) && m.prototype.id === 'user-history';
   },
 
   'plug/views/user/settings/SettingsView': function (m) {
