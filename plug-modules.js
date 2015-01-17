@@ -395,18 +395,57 @@ var plugModules = {
   },
   'plug/views/dashboard/news/NewsRowView': todo,
 
+  // footer
+  'plug/views/footer/FacebookMenuView': function (m) {
+    return isView(m) && m.prototype.id === 'facebook-menu';
+  },
+  'plug/views/footer/FooterView': function (m) {
+    return isView(m) && m.prototype.id === 'footer';
+  },
+  'plug/views/footer/PlaylistMetaView': function (m) {
+    return isView(m) && m.prototype.id === 'playlist-meta';
+  },
+  'plug/views/footer/SocialMenuView': function (m) {
+    return isView(m) && m.prototype.className === 'social-menu' && m.prototype.template === undefined;
+  },
+  'plug/views/footer/StatusMenuView': function (m) {
+    return isView(m) && m.prototype.className === 'status menu';
+  },
+  'plug/views/footer/TwitterMenuView': function (m) {
+    return isView(m) && m.prototype.id === 'twitter-menu';
+  },
+  'plug/views/footer/UserMenuView': function (m) {
+    return isView(m) && m.prototype.className === 'user menu';
+  },
+  'plug/views/footer/UserMetaView': function (m) {
+    return isView(m) && m.prototype.id === 'footer-user';
+  },
+
   // spinners
   'plug/views/spinner/SpinnerView': function (m) {
     return isView(m) && 'LARGE' in m && 'MEDIUM' in m && 'SMALL' in m;
   },
 
+  // tooltips
+  'plug/views/tooltips/tooltip': function (m) {
+    return m instanceof Backbone.View && m.id === 'tooltip';
+  },
+
   // grab menu
-  'plug/views/grabs/GrabMenu': function (m) {
+  'plug/views/grabs/grabMenu': function (m) {
     return m instanceof Backbone.View && m.className === 'pop-menu';
   },
   'plug/views/grabs/GrabMenuRow': function (m) {
     return m.prototype && m.prototype.tagName === 'li' &&
       functionContains(m.prototype.render, 'icon-create-playlist') !== -1;
+  },
+
+  // on-screen room notifications
+  'plug/views/notifications/NotificationsAreaView': function (m) {
+    return isView(m) && m.prototype.id === 'toast-notifications';
+  },
+  'plug/views/notifications/NotificationView': function (m) {
+    return isView(m) && m.prototype.className === 'notification' && _.isFunction(m.prototype.slideDown);
   },
 
   // dialogs
