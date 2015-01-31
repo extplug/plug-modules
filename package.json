@@ -1,5 +1,12 @@
 {
   "name": "plug-modules",
-  "version": "0.2.0",
-  "description": "Retroactively add reasonable module definition paths to plug.dj."
+  "version": "0.3.0",
+  "description": "Retroactively add reasonable module definition paths to plug.dj.",
+  "main": "./plug-modules",
+  "license": "MIT",
+  "bugs": "https://github.com/PlugLynn/plug-modules/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PlugLynn/plug-modules.git"
+  }
 }
