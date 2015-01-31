@@ -51,6 +51,17 @@ var commandModule = function (method, url) {
 };
 
 /**
+ * Tests if a module is a collection of a certain type of Model.
+ *
+ * @param {Object} m Module.
+ * @param {function()} Model The Model.
+ * @return {boolean} True if the module is a collection of the given models, false otherwise.
+ */
+var isCollectionOf = function (m, Model) {
+  return m instanceof Backbone.Collection && m.model === Model;
+};
+
+/**
  * Checks if the given module is a Dialog class.
  *
  * @param {Object} m Module.
@@ -166,6 +177,9 @@ var plugModules = {
   'plug/actions/booth/ModerateForceSkipAction': commandModule('POST', 'booth/skip'),
   'plug/actions/booth/ModerateRemoveDJAction': commandModule('DELETE', 'booth/remove/'),
   'plug/actions/booth/SkipTurnAction': commandModule('POST', 'booth/skip/me'),
+  'plug/actions/booth/BoothLockAction': commandModule('PUT', 'booth/lock'),
+  'plug/actions/booth/BoothMoveAction': commandModule('POST', 'booth/move'),
+  'plug/actions/booth/BoothSetCycleAction': commandModule('PUT', 'booth/cycle'),
   'plug/actions/friends/BefriendAction': commandModule('POST', 'friends'),
   'plug/actions/friends/UnfriendAction': commandModule('DELETE', 'friends/'),
   'plug/actions/ignores/IgnoreAction': commandModule('POST', 'ignores'),
@@ -179,6 +193,7 @@ var plugModules = {
   'plug/actions/media/MediaUpdateAction': commandModule('PUT', 'playlists/"+this.id+"/media/update'),
   'plug/actions/media/SearchPlaylistsAction': commandModule('GET', 'playlists/media?q='),
   'plug/actions/mutes/MuteAction': commandModule('POST', 'mutes'),
+  'plug/actions/mutes/UnmuteAction': commandModule('DELETE', 'mutes/'),
   'plug/actions/mutes/MutesListAction': commandModule('GET', 'mutes'),
   'plug/actions/news/NewsListAction': commandModule('GET', 'news'),
   'plug/actions/notifications/NotificationReadAction': commandModule('DELETE', 'notifications/'),
@@ -355,10 +370,77 @@ var plugModules = {
   'plug/models/User': function (m) {
     return hasDefaults(m) && 'avatarID' in m.prototype.defaults && 'role' in m.prototype.defaults;
   },
-  'plug/models/relatedMedia': todo,
+  'plug/models/YouTubeRelatedMedia': todo,
 
+  'plug/collections/allAvatars': function (m) {
+    return m instanceof Backbone.Collection && _.isFunction(m.__generate);
+  },
+  'plug/collections/bannedUsers': function (m) {
+    return isCollectionOf(m, require('plug/models/BannedUser'));
+  },
+  'plug/collections/currentPlaylistFilter': function (m) {
+    return isCollectionOf(m, require('plug/models/Media')) &&
+      _.isFunction(m.setFilter) && _.isFunction(m.isActualFirst);
+  },
+  'plug/collections/dashboardRooms': function (m) {
+    if (!isCollectionOf(m, require('plug/models/Room'))) {
+      return false;
+    }
+    var fakeRoomA = { get: function (key) { return key === 'population' ? 10 : 'a'; } },
+        fakeRoomB = { get: function (key) { return key === 'population' ? 10 : 'b'; } },
+        fakeRoomC = { get: function (key) { return key === 'population' ? 20 : 'c'; } };
+    return functionContains(m.comparator, 'population') &&
+      functionContains(m.comparator, 'name') &&
+      m.comparator(fakeRoomA, fakeRoomB) === 1 &&
+      m.comparator(fakeRoomC, fakeRoomB) === -1;
+  },
   'plug/collections/history': function (m) {
     return m instanceof Backbone.Collection && _.isFunction(m.onPointsChange);
+  },
+  'plug/collections/ignores': todo,
+  'plug/collections/imports': todo,
+  'plug/collections/inventory': function (m) {
+    return isCollectionOf(m, require('plug/models/Avatar')) && todo();
+  },
+  'plug/collections/mutes': function (m) {
+    return isCollectionOf(m, require('plug/models/MutedUser'));
+  },
+  'plug/collections/notifications': function (m) {
+    return isCollectionOf(m, require('plug/models/Notification'));
+  },
+  'plug/collections/playlists': function (m) {
+    return isCollectionOf(m, require('plug/models/Playlist')) &&
+      _.isFunction(m.jumpToMedia) && _.isArray(m.activeMedia);
+  },
+  'plug/collections/currentPlaylist': function (m) {
+    return isCollectionOf(m, require('plug/models/Media')) && todo();
+  },
+  'plug/collections/probablySoundCloudPlaylists': todo,
+  'plug/collections/purchasableAvatars': todo,
+  'plug/collections/searchResults2': todo,
+  'plug/collections/searchResults': todo,
+  'plug/collections/staffFiltered': function (m) {
+    return isCollectionOf(m, require('plug/models/User')) && _.isFunction(m.setFilter) &&
+      !('sourceCollection' in m);
+  },
+  'plug/collections/staff': function (m) {
+    return isCollectionOf(m, require('plug/models/User')) &&
+      m.comparator === require('plug/util/comparators').role;
+  },
+  'plug/collections/unknown0': todo,
+  'plug/collections/userHistory': todo,
+  'plug/collections/userRooms': function (m) {
+    return isCollectionOf(m, require('plug/models/Room')) && todo();
+  },
+  'plug/collections/usersFiltered': function (m) {
+    return isCollectionOf(m, require('plug/models/User')) && _.isFunction(m.setFilter) &&
+      'sourceCollection' in m;
+  },
+  'plug/collections/users': function (m) {
+    return m instanceof Backbone.Collection && _.isFunction(m.getAudience);
+  },
+  'plug/collections/waitlist': function (m) {
+    return m instanceof Backbone.Collection && 'isTheUserPlaying' in m;
   },
 
   // application views
@@ -449,8 +531,19 @@ var plugModules = {
   },
 
   // dialogs
+  'plug/views/dialogs/DialogContainerView': function (m) {
+    return m.prototype && m.prototype.id === 'dialog-container';
+  },
+  'plug/views/dialogs/Dialog': function (m) {
+    return m.prototype && _.isFunction(m.prototype.onContainerClick);
+  },
   'plug/views/dialogs/AlertDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-alert';
+  },
+  // BoothLockDialog is the only dialog with a "dialog-confirm" id and a "destructive" class.
+  'plug/views/dialogs/BoothLockDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-confirm' &&
+      m.prototype.className.indexOf('destructive') === -1;
   },
   'plug/views/dialogs/ConfirmDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-confirm';
@@ -481,31 +574,55 @@ var plugModules = {
   },
   'plug/views/dialogs/PreviewDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-preview' &&
+      // tutorial dialogs also have the dialog-preview ID
       m.prototype.className.indexOf('tutorial') === -1;
   },
-  'plug/views/dialogs/UserRoleDialog': function (m) {
+  'plug/views/dialogs/PurchaseAvatarDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-purchase-avatar';
+  },
+  'plug/views/dialogs/RoomCreateDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-room-create';
+  },
+  'plug/views/dialogs/StaffRoleDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-user-role';
   },
   'plug/views/dialogs/TutorialDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-preview' &&
       m.prototype.className.indexOf('tutorial') !== -1;
   },
-  'plug/views/dialogs/UserBanDialog': function (m) {
-    return isDialog(m) && m.prototype.id === 'dialog-ban-user';
-  },
   'plug/views/dialogs/UserMuteDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-mute-user';
   },
-  'plug/views/dialogs/DialogContainerView': function (m) {
-    return m.prototype && m.prototype.id === 'dialog-container';
+  'plug/views/dialogs/UserBanDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-ban-user';
   },
-  'plug/views/dialogs/Dialog': function (m) {
-    return m.prototype && _.isFunction(m.prototype.onContainerClick);
+  'plug/views/dialogs/UserRoleDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-user-role';
   },
-  // BoothLockDialog is the only dialog with a "dialog-confirm" id and a "destructive" class.
-  'plug/views/dialogs/BoothLockDialog': function (m) {
-    return isDialog(m) && m.prototype.id === 'dialog-confirm' &&
-      m.prototype.className.indexOf('destructive') === -1;
+
+  // playlist views
+  'plug/views/playlists/PlaylistPanelView': function (m) {
+    // TODO ensure that there are no other modules that match this footprint
+    return isView(m) && m.prototype.id === 'playlist-panel';
+  },
+  'plug/views/playlists/media/MediaPanelView': function (m) {
+    // TODO ensure that there are no other modules that match this footprint
+    return isView(m) && m.prototype.id === 'media-panel';
+  },
+  'plug/views/playlists/menu/PlaylistMenuView': function (m) {
+    return m instanceof Backbone.View && m.id === 'playlist-menu';
+  },
+  'plug/views/playlists/menu/PlaylistRowView': function (m) {
+    return isView(m) && m.prototype.className === 'row' && _.isFunction(m.prototype.onSyncingChange);
+  },
+  'plug/views/playlists/search/SearchMenuView': function (m) {
+    return isView(m) && m.prototype.id === 'search-menu' && _.isFunction(m.prototype.onYouTubeClick);
+  },
+  'plug/views/playlists/search/SearchSuggestionView': function (m) {
+    return isView(m) && m.prototype.id === 'search-suggestion';
+  },
+  'plug/views/playlists/search/SearchView': function (m) {
+    return isView(m) && m.prototype.id === 'search';
   },
 
   // user views
@@ -565,39 +682,60 @@ var plugModules = {
   'plug/views/user/settings/SettingsAccountView': function (m) {
     return m.prototype && m.prototype.className === 'account section';
   },
-  'plug/views/room/audienceView': function (m) {
+  'plug/views/rooms/audienceView': function (m) {
     return m instanceof Backbone.View && m.id === 'audience';
   },
-  'plug/views/room/roomLoaderView': function (m) {
+  'plug/views/rooms/roomLoaderView': function (m) {
     return m instanceof Backbone.View && m.id === 'room-loader';
   },
-  'plug/views/room/boothView': function (m) {
+  'plug/views/rooms/boothView': function (m) {
     return m instanceof Backbone.View && m.id === 'dj-booth';
   },
-  'plug/views/room/DJButtonView': function (m) {
+  'plug/views/rooms/DJButtonView': function (m) {
     return isView(m) && m.prototype.id === 'dj-button';
   },
-  'plug/views/room/RoomView': function (m) {
+  'plug/views/rooms/RoomView': function (m) {
     return isView(m) && m.prototype.id === 'room';
   },
-  'plug/views/room/VotePanelView': function (m) {
+  'plug/views/rooms/VotePanelView': function (m) {
     return isView(m) && m.prototype.id === 'vote';
   },
-  'plug/views/room/playback/PlaybackView': function (m) {
+  'plug/views/rooms/playback/PlaybackView': function (m) {
     return isView(m) && m.prototype.id === 'playback';
   },
-  'plug/views/room/playback/VolumeView': function (m) {
+  'plug/views/rooms/playback/VolumeView': function (m) {
     return isView(m) && m.prototype.id === 'volume';
   },
-  'plug/views/room/users/RoomUserRowView': function (m) {
+  'plug/views/rooms/users/RoomUserRowView': function (m) {
     return _.isFunction(m) && _.isFunction(m.prototype.vote);
   },
   'plug/views/rooms/chat/ChatView': function (m) {
     return isView(m) && m.prototype.id === 'chat';
-  }
+  },
+  'plug/views/rooms/chat/ChatSuggestionView': function (m) {
+    return isView(m) && m.prototype.id === 'chat-suggestion';
+  },
+  'plug/views/rooms/popout/PopoutChatSuggestionView': function (m) {
+    // subclass of ChatSuggestionView with no additional properties
+    return isView(m) && m.__super__ && m.__super__.id === 'chat-suggestion';
+  },
+  'plug/views/rooms/popout/PopoutChatView': function (m) {
+    // subclass of ChatView
+    return isView(m) && m.__super__ && m.__super__.id === 'chat';
+  },
+  'plug/views/rooms/popout/PopoutMetaView': function (m) {
+    return isView(m) && m.prototype.id === 'meta';
+  },
+  'plug/views/rooms/popout/PopoutView': function (m) {
+    return isView(m) && functionContains(m.prototype.show, 'plugdjpopout');
+  },
+  'plug/views/rooms/popout/PopoutVoteView': function (m) {
+    // subclass of VotePanelView
+    return isView(m) && m.__super__ && m.__super__.id === 'vote';
+  },
+
 };
 
 _.each(plugModules, function (filter, name) {
   setDefine(name, plugRequire(filter));
 });
-
