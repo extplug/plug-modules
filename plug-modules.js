@@ -9,6 +9,16 @@ var setDefine = function (name, module) {
 };
 
 /**
+ * Fast require using require.js's internal registry.
+ *
+ * @param {string} name Module name.
+ * @return Module definition, if found.
+ */
+var fastRequire = function (name) {
+  return require.s.contexts._.defined[name];
+}
+
+/**
  * Find a plug.dj module that matches a filter function.
  *
  * @param {function()} fn Filter function `fn(module)`.
@@ -58,7 +68,7 @@ var commandModule = function (method, url) {
  * @return {boolean} True if the module is a collection of the given models, false otherwise.
  */
 var isCollectionOf = function (m, Model) {
-  return m instanceof Backbone.Collection && m.model === Model;
+  return Model && m instanceof Backbone.Collection && m.model === Model;
 };
 
 /**
@@ -126,6 +136,18 @@ var hasDefaults = function (m) {
 };
 
 /**
+ * Checks if a given module has the given attributes (Backbone models).
+ *
+ * @param {Object} m Module.
+ * @return True if the module has the given attributes, false otherwise.
+ */
+var hasAttributes = function (m, attributes) {
+  return m instanceof Backbone.Model && attributes.every(function (attr) {
+    return attr in m.attributes;
+  })
+};
+
+/**
  * Checks if a View template contains an element matching a given CSS selector.
  *
  * @param {function()} View View class.
@@ -174,13 +196,16 @@ var plugModules = {
   'plug/actions/booth/JoinWaitlistAction': commandModule('POST', 'booth'),
   'plug/actions/booth/LeaveWaitlistAction': commandModule('DELETE', 'booth'),
   'plug/actions/booth/ModerateAddDJAction': commandModule('POST', 'booth/add'),
-  'plug/actions/booth/ModerateForceSkipAction': commandModule('POST', 'booth/skip'),
+  'plug/actions/booth/ModerateForceSkipAction': commandModule('POST', 'booth/skip"'),
   'plug/actions/booth/ModerateRemoveDJAction': commandModule('DELETE', 'booth/remove/'),
   'plug/actions/booth/SkipTurnAction': commandModule('POST', 'booth/skip/me'),
   'plug/actions/booth/BoothLockAction': commandModule('PUT', 'booth/lock'),
   'plug/actions/booth/BoothMoveAction': commandModule('POST', 'booth/move'),
   'plug/actions/booth/BoothSetCycleAction': commandModule('PUT', 'booth/cycle'),
   'plug/actions/friends/BefriendAction': commandModule('POST', 'friends'),
+  'plug/actions/friends/ListFriendsAction': commandModule('GET', 'friends"'),
+  'plug/actions/friends/ListInvitesAction': commandModule('GET', 'friends/invites'),
+  'plug/actions/friends/IgnoreRequestAction': commandModule('PUT', 'friends/ignore'),
   'plug/actions/friends/UnfriendAction': commandModule('DELETE', 'friends/'),
   'plug/actions/ignores/IgnoreAction': commandModule('POST', 'ignores'),
   'plug/actions/ignores/UnignoreAction': commandModule('DELETE', 'ignores/'),
@@ -199,14 +224,14 @@ var plugModules = {
   'plug/actions/notifications/NotificationReadAction': commandModule('DELETE', 'notifications/'),
   'plug/actions/playlists/ListPlaylistsAction': commandModule('GET', 'playlists'),
   'plug/actions/playlists/PlaylistActivateAction': commandModule('PUT', 'playlists/"+this.data+"/activate'),
-  'plug/actions/playlists/PlaylistCreateAction': commandModule('POST', 'playlists'),
+  'plug/actions/playlists/PlaylistCreateAction': commandModule('POST', 'playlists"'),
   'plug/actions/playlists/PlaylistDeleteAction': commandModule('DELETE', 'playlists/'),
   'plug/actions/playlists/PlaylistRenameAction': commandModule('PUT', 'playlists/"+this.id+"/rename'),
   'plug/actions/playlists/PlaylistShuffleAction': commandModule('PUT', 'playlists/"+this.data+"/shuffle'),
   'plug/actions/profile/SetBlurbAction': commandModule('PUT', 'profile/blurb'),
   'plug/actions/rooms/ListFavoritesAction': commandModule('GET', 'rooms/favorites'),
   'plug/actions/rooms/ListMyRoomsAction': commandModule('GET', 'rooms/me'),
-  'plug/actions/rooms/ListRoomsAction': commandModule('GET', 'rooms'),
+  'plug/actions/rooms/ListRoomsAction': commandModule('GET', 'rooms"'),
   'plug/actions/rooms/ModerateDeleteChatAction': commandModule('DELETE', 'chat/"+this.data'),
   'plug/actions/rooms/RoomCreateAction': commandModule('POST', 'rooms'),
   'plug/actions/rooms/RoomFavoriteAction': commandModule('POST', 'rooms/favorites'),
@@ -217,19 +242,54 @@ var plugModules = {
   'plug/actions/rooms/RoomUpdateAction': commandModule('POST', 'rooms/update'),
   'plug/actions/rooms/RoomValidateAction': commandModule('GET', 'rooms/validate'),
   'plug/actions/rooms/VoteAction': commandModule('POST', 'votes'),
+  'plug/actions/settings/ChangeUsernameAction': commandModule('POST', 'store/purchase/username'),
+  'plug/actions/soundcloud/SoundCloudSearchService': function (m) {
+    return _.isFunction(m) && _.isFunction(m.prototype.onResolve) && _.isFunction(m.prototype.parse);
+  },
+  'plug/actions/soundcloud/SoundCloudFavoritesService': function (m) {
+    return _.isFunction(m) && _.isFunction(m.prototype.auth) &&
+      functionContains(m.prototype.load, '/me/favorites');
+  },
+  'plug/actions/soundcloud/SoundCloudTracksService': function (m) {
+    return _.isFunction(m) && _.isFunction(m.prototype.auth) &&
+      functionContains(m.prototype.load, '/me/tracks');
+  },
+  'plug/actions/soundcloud/SoundCloudSetsService': function (m) {
+    return _.isFunction(m) && _.isFunction(m.prototype.auth) &&
+      functionContains(m.prototype.load, '/me/playlists');
+  },
+  'plug/actions/soundcloud/SoundCloudPermalinkService': function (m) {
+    return _.isFunctionm(m) && functionContains(m.prototype.load, 'api.soundcloud.com/tracks') &&
+      functionContains(m.prototype.onComplete, 'permalink_url');
+  },
   'plug/actions/staff/StaffListAction': commandModule('GET', 'staff'),
   'plug/actions/staff/StaffRemoveAction': commandModule('DELETE', 'staff/'),
   'plug/actions/staff/StaffUpdateAction': commandModule('POST', 'staff/update'),
-  'plug/actions/store/AvatarPurchaseAction': commandModule('POST', 'store/purchase'),
+  'plug/actions/store/PurchaseAction': commandModule('POST', 'store/purchase'),
   'plug/actions/store/ProductsAction': commandModule('GET', 'store/products'),
   'plug/actions/store/InventoryAction': commandModule('GET', 'store/inventory'),
+  'plug/actions/user/ValidateNameAction': commandModule('GET', 'users/validate/'),
   'plug/actions/user/SetStatusAction': commandModule('PUT', 'users/status'),
   'plug/actions/user/SetLanguageAction': commandModule('PUT', 'users/language'),
   'plug/actions/user/SetAvatarAction': commandModule('PUT', 'users/avatar'),
+  'plug/actions/user/SetBadgeAction': commandModule('PUT', 'users/badge'),
   'plug/actions/user/MeAction': commandModule('GET', '"users/me"'),
+  'plug/actions/user/ListTransactionsAction': commandModule('GET', 'users/me/transactions'),
   'plug/actions/user/UserHistoryAction': commandModule('GET', 'users/me/history'),
   'plug/actions/user/UserFindAction': commandModule('GET', 'users/"+this.data'),
-  'plug/actions/user/BulkFindAction': commandModule('GET', 'users/bulk'),
+  'plug/actions/user/BulkFindAction': commandModule('POST', 'users/bulk'),
+  'plug/actions/youtube/YouTubePlaylistService': function (m) {
+    return _.isFunction(m) && _.isFunction(m.prototype.sortByName) && _.isFunction(m.prototype.next);
+  },
+  'plug/actions/youtube/YouTubeImportService': function (m) {
+    return _.isFunction(m) && _.isFunction(m.prototype.getURL) && _.isFunction(m.prototype.next);
+  },
+  'plug/actions/youtube/YouTubeSearchService': function (m) {
+    return _.isFunction(m) && functionContains(m.prototype.load, 'paid-content=false');
+  },
+  'plug/actions/youtube/YouTubeSuggestService': function (m) {
+    return _.isFunction(m) && functionContains(m.prototype.load, 'google.com/complete/search');
+  },
 
   'plug/core/EventManager': function (m) {
     return _.isObject(m.eventTypeMap) && _.isObject(m.commandClassMap._map);
@@ -248,6 +308,10 @@ var plugModules = {
            // this is a bit lame, unfortunately plug.dj's "classes" don't publicly store their superclasses
            functionsSeemEqual(m.prototype.execute, function () { this.event = undefined, delete this.event });
   },
+  'plug/core/__unknown0__': function (m) {
+    // subclass of EventHandler
+    return _.isFunction(m) && m.prototype.hasOwnProperty('listenTo') && m.prototype.hasOwnProperty('finish');
+  },
 
   'plug/settings/settings': function (m) {
     return _.isObject(m.settings);
@@ -262,14 +326,20 @@ var plugModules = {
   'plug/util/API': function (m) {
     return 'WAIT_LIST_UPDATE' in m && 'CHAT_COMMAND' in m ;
   },
+  'plug/util/audienceGrid': function (m) {
+    return _.isFunction(m.defaultInvalidation) && _.isFunction(m.invalidateRoomElements);
+  },
+  'plug/util/AvatarManifest': function (m) {
+    return _.isFunction(m.getAvatarUrl) && _.isFunction(m.getHitSlot);
+  },
   'plug/util/comparators': function (m) {
     return _.isFunction(m.uIndex) && _.isFunction(m.priority);
   },
-  'plug/util/Dictionary': function (m) {
-    return m.prototype && m.prototype._map === null && _.isFunction(m.prototype.adopt);
-  },
   'plug/util/DateTime': function (m) {
     return _.isFunction(m.ServerDate);
+  },
+  'plug/util/Dictionary': function (m) {
+    return m.prototype && m.prototype._map === null && _.isFunction(m.prototype.adopt);
   },
   'plug/util/emoji': function (m) {
     return _.isFunction(m.emojify) && m.map && 'shipit' in m.map;
@@ -280,8 +350,17 @@ var plugModules = {
   'plug/util/Random': function (m) {
     return _.isFunction(m) && m.MASTER instanceof m && _.isFunction(m.MASTER.newSeed);
   },
+  'plug/util/soundCloudSdkLoader': function (m) {
+    return _.isFunction(m.g) && _.isString(m.id);
+  },
+  'plug/util/twitterWidgetLoader': function (m) {
+    return m.f && _.isFunction(m.i);
+  },
   'plug/util/urls': function (m) {
     return 'csspopout' in m && 'scThumbnail' in m;
+  },
+  'plug/util/userSuggestion': function (m) {
+    return _.isArray(m.groups) && _.isFunction(m.initGroups) && _.isFunction(m.lookup);
   },
   'plug/util/util': function (m) {
     return _.isFunction(m.h2t);
@@ -296,6 +375,9 @@ var plugModules = {
   'plug/events/CustomRoomEvent': eventModule('CustomRoomEvent'),
   'plug/events/DJEvent': eventModule('DJEvent'),
   'plug/events/FacebookLoginEvent': eventModule('FacebookLoginEvent'),
+  'plug/events/FriendEvent': function (m) {
+    return m._name === 'UserEvent' && m.ACCEPT === 'UserEvent:accept' && m.UNFRIEND === 'UserEvent:unfriend';
+  },
   'plug/events/HistorySyncEvent': eventModule('HistorySyncEvent'),
   'plug/events/ImportSoundCloudEvent': eventModule('ImportSoundCloudEvent'),
   'plug/events/ImportYouTubeEvent': eventModule('ImportYouTubeEvent'),
@@ -319,17 +401,23 @@ var plugModules = {
   'plug/events/ShowDialogEvent': eventModule('ShowDialogEvent'),
   'plug/events/ShowUserRolloverEvent': eventModule('ShowUserRolloverEvent'),
   'plug/events/StoreEvent': eventModule('StoreEvent'),
-  'plug/events/UserEvent': eventModule('UserEvent'),
+  'plug/events/UserEvent': function (m) {
+    return m._name === 'UserEvent' && m.FRIENDS === 'UserEvent:friends' && m.PRESENCE === 'UserEvent:presence';
+  },
   'plug/events/UserListEvent': eventModule('UserListEvent'),
 
   'plug/models/Avatar': function (m) {
     return m.AUDIENCE && m.DJ && _.isObject(m.IMAGES);
   },
+  'plug/models/Badge': function (m) {
+    return hasDefaults(m) && 'level' in m.prototype.defaults && 'name' in m.prototype.defaults &&
+      !('category' in m.prototype.defaults) && 'active' in m.prototype.defaults;
+  },
   'plug/models/BannedUser': function (m) {
     return hasDefaults(m) && 'moderator' in m.prototype.defaults && 'duration' in m.prototype.defaults;
   },
   'plug/models/booth': function (m) {
-    return 'isLocked' in m && 'shouldCycle' in m;
+    return hasAttributes(m, [ 'isLocked', 'shouldCycle' ]);
   },
   'plug/models/currentMedia': function (m) {
     return _.isFunction(m.onMediaChange) && _.isFunction(m.onStartTimeChange);
@@ -362,28 +450,40 @@ var plugModules = {
     return hasDefaults(m) && 'action' in m.prototype.defaults && 'value' in m.prototype.defaults;
   },
   'plug/models/Playlist': function (m) {
-    return hasDefaults(m) && 'playlistID' in m.prototype.defaults && 'username' in m.prototype.defaults;
+    return hasDefaults(m) && 'active' in m.prototype.defaults && 'syncing' in m.prototype.defaults;
   },
   'plug/models/Room': function (m) {
     return hasDefaults(m) && 'slug' in m.prototype.defaults && 'capacity' in m.prototype.defaults;
   },
+  'plug/models/StoreExtra': function (m) {
+    return hasDefaults(m) && 'category' in m.prototype.defaults && 'name' in m.prototype.defaults &&
+      !('active' in m.prototype.defaults);
+  },
+  'plug/models/Transaction': function (m) {
+    return hasDefaults(m) && 'type' in m.prototype.defaults && 'item' in m.prototype.defaults;
+  },
   'plug/models/User': function (m) {
     return hasDefaults(m) && 'avatarID' in m.prototype.defaults && 'role' in m.prototype.defaults;
   },
-  'plug/models/YouTubeRelatedMedia': todo,
+  'plug/models/YouTubePlaylist': function (m) {
+    return hasDefaults(m) && 'playlistID' in m.prototype.defaults && 'username' in m.prototype.defaults;
+  },
+  'plug/models/relatedSearch': function (m) {
+    return hasAttributes(m, [ 'related', 'relatedPlaylist' ]);
+  },
 
   'plug/collections/allAvatars': function (m) {
     return m instanceof Backbone.Collection && _.isFunction(m.__generate);
   },
   'plug/collections/bannedUsers': function (m) {
-    return isCollectionOf(m, require('plug/models/BannedUser'));
+    return isCollectionOf(m, fastRequire('plug/models/BannedUser'));
   },
   'plug/collections/currentPlaylistFilter': function (m) {
-    return isCollectionOf(m, require('plug/models/Media')) &&
+    return isCollectionOf(m, fastRequire('plug/models/Media')) &&
       _.isFunction(m.setFilter) && _.isFunction(m.isActualFirst);
   },
   'plug/collections/dashboardRooms': function (m) {
-    if (!isCollectionOf(m, require('plug/models/Room'))) {
+    if (!isCollectionOf(m, fastRequire('plug/models/Room'))) {
       return false;
     }
     var fakeRoomA = { get: function (key) { return key === 'population' ? 10 : 'a'; } },
@@ -394,53 +494,101 @@ var plugModules = {
       m.comparator(fakeRoomA, fakeRoomB) === 1 &&
       m.comparator(fakeRoomC, fakeRoomB) === -1;
   },
+  'plug/collections/friendRequests': todo,
+  'plug/collections/friends': function (m) {
+    return isCollectionOf(m, fastRequire('plug/models/User')) &&
+      _.isFunction(m.onUsersAdd) &&
+      _.isFunction(m.lookup) &&
+      _.isFunction(m.onRemove) &&
+      _.isFunction(m.onAdd) &&
+      'MAX' in m.constructor;
+  },
   'plug/collections/history': function (m) {
     return m instanceof Backbone.Collection && _.isFunction(m.onPointsChange);
   },
   'plug/collections/ignores': todo,
   'plug/collections/imports': todo,
-  'plug/collections/inventory': function (m) {
-    return isCollectionOf(m, require('plug/models/Avatar')) && todo();
+  'plug/collections/myAvatars': function (m) {
+    return isCollectionOf(m, fastRequire('plug/models/Avatar')) && _.isFunction(m.onChange);
+  },
+  'plug/collections/myBadges': function (m) {
+    return isCollectionOf(m, fastRequire('plug/models/Badge')) && _.isFunction(m.onChange);
   },
   'plug/collections/mutes': function (m) {
-    return isCollectionOf(m, require('plug/models/MutedUser'));
+    return isCollectionOf(m, fastRequire('plug/models/MutedUser'));
   },
   'plug/collections/notifications': function (m) {
-    return isCollectionOf(m, require('plug/models/Notification'));
+    return isCollectionOf(m, fastRequire('plug/models/Notification'));
   },
   'plug/collections/playlists': function (m) {
-    return isCollectionOf(m, require('plug/models/Playlist')) &&
+    return isCollectionOf(m, fastRequire('plug/models/Playlist')) &&
       _.isFunction(m.jumpToMedia) && _.isArray(m.activeMedia);
   },
   'plug/collections/currentPlaylist': function (m) {
-    return isCollectionOf(m, require('plug/models/Media')) && todo();
+    return isCollectionOf(m, fastRequire('plug/models/Media')) && todo();
   },
   'plug/collections/probablySoundCloudPlaylists': todo,
   'plug/collections/purchasableAvatars': todo,
   'plug/collections/searchResults2': todo,
   'plug/collections/searchResults': todo,
   'plug/collections/staffFiltered': function (m) {
-    return isCollectionOf(m, require('plug/models/User')) && _.isFunction(m.setFilter) &&
+    return isCollectionOf(m, fastRequire('plug/models/User')) && _.isFunction(m.setFilter) &&
       !('sourceCollection' in m);
   },
+  // staff is only updated when a StaffListAction is triggered
+  // eg. when the user navigates to the staff tab
   'plug/collections/staff': function (m) {
-    return isCollectionOf(m, require('plug/models/User')) &&
-      m.comparator === require('plug/util/comparators').role;
+    return isCollectionOf(m, fastRequire('plug/models/User')) &&
+      // differ from the general users collection
+      !_.isFunction(m.getAudience) &&
+      m.comparator === fastRequire('plug/util/comparators').role;
   },
-  'plug/collections/unknown0': todo,
+  'plug/collections/storeExtras': function (m) {
+    return isCollectionOf(m, fastRequire('plug/models/StoreExtra'));
+  },
+  'plug/collections/transactions': function (m) {
+    return isCollectionOf(m, fastRequire('plug/models/Transaction'));
+  },
+  'plug/collections/__unknown0__': todo,
   'plug/collections/userHistory': todo,
   'plug/collections/userRooms': function (m) {
-    return isCollectionOf(m, require('plug/models/Room')) && todo();
-  },
-  'plug/collections/usersFiltered': function (m) {
-    return isCollectionOf(m, require('plug/models/User')) && _.isFunction(m.setFilter) &&
-      'sourceCollection' in m;
+    return isCollectionOf(m, fastRequire('plug/models/Room')) && todo();
   },
   'plug/collections/users': function (m) {
     return m instanceof Backbone.Collection && _.isFunction(m.getAudience);
   },
+  'plug/collections/usersFiltered': function (m) {
+    return isCollectionOf(m, fastRequire('plug/models/User')) && _.isFunction(m.setFilter) &&
+      'sourceCollection' in m;
+  },
   'plug/collections/waitlist': function (m) {
     return m instanceof Backbone.Collection && 'isTheUserPlaying' in m;
+  },
+
+  // facades
+  'plug/facades/chatFacade': function (m) {
+    return _.isFunction(m.onChatReceived) && _.isFunction(m.checkMutes);
+  },
+  'plug/facades/dashboardRoomsFacade': function (m) {
+    return _.isFunction(m.more) && _.isFunction(m.loadFavorites);
+  },
+  'plug/facades/importSoundCloudFacade': function (m) {
+    return _.isFunction(m.importAllAlert) && _.isFunction(m.importSelectedAlert);
+  },
+  'plug/facades/importYouTubeFacade': function (m) {
+    return _.isFunction(m.importAlert) && _.isFunction(m.onImportMediaComplete);
+  },
+  'plug/facades/ImportMediaFacade': function (m) {
+    return 'instance' in m && _.isFunction(m.instance.onCIDResult);
+  },
+  'plug/facades/relatedMediaFacade': function (m) {
+    return _.isFunction(m.appendUnknown) && _.isFunction(m.resetRelated);
+  },
+  'plug/facades/remoteMediaFacade': function (m) {
+    return _.isFunction(m.ytSearch) && _.isFunction(m.ytRelated) && _.isFunction(m.scPermalink);
+  },
+  'plug/facades/playlistsSearchFacade': function (m) {
+    return _.isFunction(m.setQuery) && _.isFunction(m.onTimeout);
   },
 
   // application views
@@ -605,6 +753,9 @@ var plugModules = {
     // TODO ensure that there are no other modules that match this footprint
     return isView(m) && m.prototype.id === 'playlist-panel';
   },
+  'plug/views/playlists/help/PlaylistHelpView': function (m) {
+    return isView(m) && viewHasElement(m, '.playlist-overlay-help');
+  },
   'plug/views/playlists/media/MediaPanelView': function (m) {
     // TODO ensure that there are no other modules that match this footprint
     return isView(m) && m.prototype.id === 'media-panel';
@@ -627,7 +778,7 @@ var plugModules = {
 
   // user views
   'plug/views/user/userRolloverView': function (m) {
-    return _.isObject(m) && m instanceof Backbone.View && m.id === 'user-rollover';
+    return m instanceof Backbone.View && m.id === 'user-rollover';
   },
   'plug/views/user/UserView': function (m) {
     return isView(m) && m.prototype.id === 'user-view';
@@ -647,7 +798,11 @@ var plugModules = {
   'plug/views/user/profile/NotificationsView': function (m) {
     return isView(m) && m.prototype.className === 'notifications section';
   },
-  'plug/views/user/profile/NotificationView': todo,
+  'plug/views/user/profile/NotificationView': function (m) {
+    return isView(m) && m.prototype.className === 'row' &&
+      // Lang.userNotifications
+      functionContains(m.prototype.render, 'userNotifications');
+  },
   'plug/views/user/profile/PointsView': function (m) {
     return isView(m) && m.prototype.className === 'points';
   },
@@ -700,6 +855,26 @@ var plugModules = {
   'plug/views/rooms/VotePanelView': function (m) {
     return isView(m) && m.prototype.id === 'vote';
   },
+  'plug/views/rooms/header/HistoryPanelView': function (m) {
+    return isView(m) && m.prototype.id === 'history-panel';
+  },
+  'plug/views/rooms/header/NowPlayingView': function (m) {
+    return isView(m) && m.prototype.id === 'now-playing-bar';
+  },
+  'plug/views/rooms/header/RoomMetaView': function (m) {
+    return isView(m) && m.prototype.id === 'room-meta';
+  },
+  'plug/views/rooms/header/RoomBarView': function (m) {
+    return isView(m) && m.prototype.id === 'room-bar';
+  },
+  'plug/views/rooms/header/HeaderPanelBarView': function (m) {
+    return isView(m) && m.prototype.id === 'header-panel-bar';
+  },
+  'plug/views/rooms/header/RoomHeaderView': function (m) {
+    return isView(m) && m.prototype.className === 'app-header' &&
+      'panels' in (new m) &&
+      'room' in (new m);
+  },
   'plug/views/rooms/playback/PlaybackView': function (m) {
     return isView(m) && m.prototype.id === 'playback';
   },
@@ -727,15 +902,31 @@ var plugModules = {
     return isView(m) && m.prototype.id === 'meta';
   },
   'plug/views/rooms/popout/PopoutView': function (m) {
-    return isView(m) && functionContains(m.prototype.show, 'plugdjpopout');
+    return m instanceof Backbone.View && functionContains(m.show, 'plugdjpopout');
   },
   'plug/views/rooms/popout/PopoutVoteView': function (m) {
     // subclass of VotePanelView
     return isView(m) && m.__super__ && m.__super__.id === 'vote';
   },
+  'plug/views/rooms/settings/GeneralSettingsView': function (m) {
+    return isView(m) && m.prototype.className === 'general-settings';
+  },
+  'plug/views/rooms/settings/RoomSettingsMenuView': function (m) {
+    return isView(m) && m.prototype.id === 'room-settings-menu';
+  },
+  'plug/views/rooms/settings/RoomSettingsView': function (m) {
+    return isView(m) && m.prototype.id === 'room-settings';
+  },
+  'plug/views/rooms/settings/ChatLevelDropdownView': function (m) {
+    return isView(m) && m.prototype.className === 'dropdown' &&
+      functionContains(m.prototype.render, 'minChatLevel');
+  }
 
 };
 
 _.each(plugModules, function (filter, name) {
-  setDefine(name, plugRequire(filter));
+  var module = plugRequire(filter);
+  if (module) {
+    setDefine(name, module);
+  }
 });
