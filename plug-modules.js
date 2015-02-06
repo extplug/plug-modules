@@ -19,6 +19,16 @@ var fastRequire = function (name) {
 }
 
 /**
+ * Adds a different name for the same module.
+ *
+ * @param newName New name for the module.
+ * @param oldName Existing name for the module.
+ */
+var alias = function (newName, oldName) {
+  setDefine(newName, fastRequire(oldName));
+};
+
+/**
  * Find a plug.dj module that matches a filter function.
  *
  * @param {function()} fn Filter function `fn(module)`.
@@ -156,11 +166,16 @@ var hasAttributes = function (m, attributes) {
  */
 var viewHasElement = function (View, sel) {
   var stubEl = $('<div>');
-  var x = new View({ el: stubEl });
-  x.render();
-  var has = x.$(sel).length > 0;
-  x.remove();
-  return has;
+  try {
+    var x = new View({ el: stubEl });
+    x.render();
+    var has = x.$(sel).length > 0;
+    x.remove();
+    return has;
+  }
+  catch (e) {
+    return false;
+  }
 };
 
 /**
@@ -170,6 +185,19 @@ var viewHasElement = function (View, sel) {
  */
 var todo = function () {
   return false;
+};
+
+/**
+ * Matcher function that checks if a given module was defined in the same namespace as an other module.
+ *
+ * @param {Object} module          Module to check.
+ * @param {string} otherModuleName Module name of a different module in the wanted namespace.
+ *
+ * @return {bool} True if the module is in the same namespace, false otherwise.
+ */
+var isInSameNamespace = function (module, otherModuleName) {
+  var otherModule = fastRequire(otherModuleName);
+  return todo();
 };
 
 /**
@@ -242,7 +270,6 @@ var plugModules = {
   'plug/actions/rooms/RoomUpdateAction': commandModule('POST', 'rooms/update'),
   'plug/actions/rooms/RoomValidateAction': commandModule('GET', 'rooms/validate'),
   'plug/actions/rooms/VoteAction': commandModule('POST', 'votes'),
-  'plug/actions/settings/ChangeUsernameAction': commandModule('POST', 'store/purchase/username'),
   'plug/actions/soundcloud/SoundCloudSearchService': function (m) {
     return _.isFunction(m) && _.isFunction(m.prototype.onResolve) && _.isFunction(m.prototype.parse);
   },
@@ -259,12 +286,13 @@ var plugModules = {
       functionContains(m.prototype.load, '/me/playlists');
   },
   'plug/actions/soundcloud/SoundCloudPermalinkService': function (m) {
-    return _.isFunctionm(m) && functionContains(m.prototype.load, 'api.soundcloud.com/tracks') &&
+    return _.isFunction(m) && functionContains(m.prototype.load, 'api.soundcloud.com/tracks') &&
       functionContains(m.prototype.onComplete, 'permalink_url');
   },
   'plug/actions/staff/StaffListAction': commandModule('GET', 'staff'),
   'plug/actions/staff/StaffRemoveAction': commandModule('DELETE', 'staff/'),
   'plug/actions/staff/StaffUpdateAction': commandModule('POST', 'staff/update'),
+  'plug/actions/store/ChangeUsernameAction': commandModule('POST', 'store/purchase/username'),
   'plug/actions/store/PurchaseAction': commandModule('POST', 'store/purchase'),
   'plug/actions/store/ProductsAction': commandModule('GET', 'store/products'),
   'plug/actions/store/InventoryAction': commandModule('GET', 'store/inventory'),
@@ -313,7 +341,7 @@ var plugModules = {
     return _.isFunction(m) && m.prototype.hasOwnProperty('listenTo') && m.prototype.hasOwnProperty('finish');
   },
 
-  'plug/settings/settings': function (m) {
+  'plug/store/settings': function (m) {
     return _.isObject(m.settings);
   },
   'plug/lang/Lang': function (m) {
@@ -367,6 +395,11 @@ var plugModules = {
   },
   'plug/util/window': function (m) {
     return 'PLAYLIST_OFFSET' in m;
+  },
+
+  'plug/server/request': function (m) {
+    return !_.isFunction(m) && _.isFunction(m.execute) &&
+      functionContains(m.execute, 'application/json');
   },
 
   'plug/events/Event': eventModule('Event'),
@@ -688,10 +721,13 @@ var plugModules = {
   'plug/views/dialogs/AlertDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-alert';
   },
+  'plug/views/dialogs/BadgeUnlockedDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-badge-unlocked';
+  },
   // BoothLockDialog is the only dialog with a "dialog-confirm" id and a "destructive" class.
   'plug/views/dialogs/BoothLockDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-confirm' &&
-      m.prototype.className.indexOf('destructive') === -1;
+      m.prototype.className.indexOf('destructive') !== -1;
   },
   'plug/views/dialogs/ConfirmDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-confirm';
@@ -725,8 +761,11 @@ var plugModules = {
       // tutorial dialogs also have the dialog-preview ID
       m.prototype.className.indexOf('tutorial') === -1;
   },
-  'plug/views/dialogs/PurchaseAvatarDialog': function (m) {
-    return isDialog(m) && m.prototype.id === 'dialog-purchase-avatar';
+  'plug/views/dialogs/PurchaseNameChangeView': function (m) {
+    return isView(m) && m.prototype.className === 'username-box';
+  },
+  'plug/views/dialogs/PurchaseDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-purchase';
   },
   'plug/views/dialogs/RoomCreateDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-room-create';
@@ -756,9 +795,20 @@ var plugModules = {
   'plug/views/playlists/help/PlaylistHelpView': function (m) {
     return isView(m) && viewHasElement(m, '.playlist-overlay-help');
   },
+  'plug/views/playlists/import/PlaylistImportPanelView': function (m) {
+    return isView(m) && m.prototype.id === 'playlist-import-panel';
+  },
+  'plug/views/playlists/media/headers/ImportHeaderView': function (m) {
+    return isView(m) && m.prototype.className === 'header import' &&
+      m.prototype.template === fastRequire('hbs!templates/playlist/media/headers/ImportHeader')();
+  },
   'plug/views/playlists/media/MediaPanelView': function (m) {
     // TODO ensure that there are no other modules that match this footprint
     return isView(m) && m.prototype.id === 'media-panel';
+  },
+  'plug/views/playlists/media/panels/HistoryPanelView': function (m) {
+    return isView(m) && m.prototype.listClass === 'history' &&
+      m.prototype.collection === fastRequire('plug/collections/history');
   },
   'plug/views/playlists/menu/PlaylistMenuView': function (m) {
     return m instanceof Backbone.View && m.id === 'playlist-menu';
@@ -777,66 +827,147 @@ var plugModules = {
   },
 
   // user views
-  'plug/views/user/userRolloverView': function (m) {
+  'plug/views/users/userRolloverView': function (m) {
     return m instanceof Backbone.View && m.id === 'user-rollover';
   },
-  'plug/views/user/UserView': function (m) {
+  'plug/views/users/UserView': function (m) {
     return isView(m) && m.prototype.id === 'user-view';
   },
+  'plug/views/users/TabbedPanelView': function (m) {
+    return isView(m) && 'defaultTab' in m.prototype && m.prototype.defaultTab === undefined;
+  },
 
-  'plug/views/user/communities/CommunitiesView': function (m) {
+  'plug/views/users/communities/CommunitiesView': function (m) {
     return isView(m) && m.prototype.id === 'user-communities';
   },
-  'plug/views/user/communities/CommunityGridView': todo,
-
-  'plug/views/user/profile/ExperienceView': function (m) {
+  'plug/views/users/communities/CommunityGridView': todo,
+  'plug/views/users/friends/FriendsView': function (m) {
+    return isView(m) && m.prototype.id === 'user-friends';
+  },
+  'plug/views/users/friends/FriendsTabMenuView': function (m) {
+    return isView(m) && m.prototype.className === 'tab-menu' &&
+      isInSameNamespace(m, 'plug/views/users/friends/FriendsView');
+  },
+  'plug/views/users/friends/FriendRowView': function (m) {
+    return isView(m) && m.prototype.className === 'row' &&
+      m.prototype.buttonTemplate === fastRequire('hbs!templates/user/friends/UserFriendButtons');
+  },
+  'plug/views/users/friends/FriendsListView': function (m) {
+    return isView(m) && m.prototype.className === 'requests section' &&
+      m.prototype.RowClass === fastRequire('plug/views/users/friends/FriendRowView');
+  },
+  'plug/views/users/friends/FriendRequestRowView': function (m) {
+    return isView(m) && m.prototype.className === 'row' &&
+      m.prototype.buttonTemplate === fastRequire('hbs!templates/user/friends/UserRequestButtons');
+  },
+  'plug/views/users/friends/FriendRequestsView': function (m) {
+    return isView(m) && m.prototype.className === 'requests section' &&
+      m.prototype.RowClass === fastRequire('plug/views/users/friends/FriendRequestRowView');
+  },
+  'plug/views/users/friends/ListView': function (m) {
+    return isView(m) && 'className' in m.prototype && 'RowClass' in m.prototype &&
+      m.prototype.className === undefined && m.prototype.RowClass === undefined &&
+      isInSameNamespace(m, 'plug/views/users/friends/FriendsView');
+  },
+  'plug/views/users/friends/SearchView': function (m) {
+    return isView(m) && m.prototype.template === fastRequire('hbs!templates/user/friends/Search');
+  },
+  'plug/views/users/inventory/InventoryView': function (m) {
+    return isView(m) && m.prototype.id === 'user-inventory';
+  },
+  'plug/views/users/inventory/InventoryTabMenuView': function (m) {
+    return isView(m) && m.prototype.template === fastRequire('hbs!templates/user/inventory/TabMenu');
+  },
+  'plug/views/users/inventory/InventoryCategoryView': function (m) {
+    return isView(m) && 'collection' in m.prototype && 'eventName' in m.prototype &&
+      m.prototype.collection === undefined && m.prototype.eventName === undefined;
+  },
+  'plug/views/users/inventory/AvatarsView': function (m) {
+    return isView(m) && m.prototype.className === 'avatars' &&
+      m.prototype.eventName === fastRequire('plug/events/StoreEvent').GET_USER_AVATARS;
+  },
+  'plug/views/users/inventory/AvatarsDropdownView': function (m) {
+    return isView(m) && m.prototype.className === 'dropdown' &&
+      functionContains(m.prototype.draw, '.userAvatars.base');
+  },
+  'plug/views/users/inventory/AvatarCellView': todo,
+  'plug/views/users/inventory/BadgesView': function (m) {
+    return isView(m) && m.prototype.className === 'badges' &&
+      m.prototype.eventName === fastRequire('plug/events/StoreEvent').GET_USER_BADGES;
+  },
+  'plug/views/users/inventory/BadgeCellView': todo,
+  'plug/views/users/inventory/TransactionHistoryView': todo,
+  'plug/views/users/inventory/TransactionRowView': todo,
+  'plug/views/users/profile/ExperienceView': function (m) {
     return isView(m) && m.prototype.className === 'experience section';
   },
-  'plug/views/user/profile/MetaView': function (m) {
+  'plug/views/users/profile/MetaView': function (m) {
     return isView(m) && m.prototype.className === 'meta section';
   },
-  'plug/views/user/profile/NotificationsView': function (m) {
+  'plug/views/users/profile/NotificationsView': function (m) {
     return isView(m) && m.prototype.className === 'notifications section';
   },
-  'plug/views/user/profile/NotificationView': function (m) {
+  'plug/views/users/profile/NotificationView': function (m) {
     return isView(m) && m.prototype.className === 'row' &&
       // Lang.userNotifications
       functionContains(m.prototype.render, 'userNotifications');
   },
-  'plug/views/user/profile/PointsView': function (m) {
+  'plug/views/users/profile/PointsView': function (m) {
     return isView(m) && m.prototype.className === 'points';
   },
   // Current User Profile,
-  'plug/views/user/profile/ProfileView': function (m) {
+  'plug/views/users/profile/ProfileView': function (m) {
     return isView(m) && m.prototype.id === 'the-user-profile';
   },
   // Other user profiles? (On the profile pages?)
-  'plug/views/user/profile/UnusedProfileView': function (m) {
+  'plug/views/users/profile/UnusedProfileView': function (m) {
     return isView(m) && m.prototype.id === 'user-profile';
   },
 
-  'plug/views/user/menu/UserMenuView': function (m) {
+  'plug/views/users/menu/UserMenuView': function (m) {
     return isView(m) && m.prototype.id === 'user-menu';
   },
+  'plug/views/users/menu/TabMenuView': function (m) {
+    return isView(m) && m.prototype.className === 'tab-menu' &&
+      'template' in m.prototype && m.prototype.template === undefined;
+  },
 
-  'plug/views/user/history/UserHistoryView': function (m) {
+  'plug/views/users/history/UserHistoryView': function (m) {
     return isView(m) && m.prototype.id === 'user-history';
   },
 
-  'plug/views/user/settings/SettingsView': function (m) {
+  'plug/views/users/settings/SettingsView': function (m) {
     return isView(m) && m.prototype.id === 'user-settings';
   },
   // there's a bunch of different TabMenuViews, this one is only different from the rest in the methods it lacks
-  'plug/views/user/settings/TabMenuView': function (m) {
-    return m.prototype && m.prototype.className === 'tab-menu' &&
+  'plug/views/users/settings/TabMenuView': function (m) {
+    return isView(m) && m.prototype.className === 'tab-menu' &&
       !('selectStore' in m.prototype) && !('select' in m.prototype) && !('selectRequests' in m.prototype);
   },
-  'plug/views/user/settings/SettingsApplicationView': function (m) {
-    return m.prototype && m.prototype.className === 'application section';
+  'plug/views/users/settings/SettingsApplicationView': function (m) {
+    return isView(m) && m.prototype.className === 'application section';
   },
-  'plug/views/user/settings/SettingsAccountView': function (m) {
-    return m.prototype && m.prototype.className === 'account section';
+  'plug/views/users/settings/LanguageDropdownView': function (m) {
+    return isView(m) && functionContains(m.prototype.render, '.languages') &&
+      functionContains(m.prototype.render, '.get("language")');
   },
+  'plug/views/users/settings/SettingsAccountView': function (m) {
+    return isView(m) && m.prototype.className === 'account section';
+  },
+  'plug/views/users/store/StoreView': function (m) {
+    return isView(m) && m.prototype.id === 'user-store';
+  },
+  'plug/views/users/store/CategoryView': todo,
+  'plug/views/users/store/AvatarsView': todo,
+  'plug/views/users/store/AvatarsDropdownView': todo,
+  'plug/views/users/store/AvatarCellView': todo,
+  'plug/views/users/store/BundleCellView': todo,
+  'plug/views/users/store/BadgesView': todo,
+  'plug/views/users/store/BadgeCellView': todo,
+  'plug/views/users/store/MiscView': todo,
+  'plug/views/users/store/MiscCellView': todo,
+  'plug/views/users/store/TabMenuView': todo,
+
   'plug/views/rooms/audienceView': function (m) {
     return m instanceof Backbone.View && m.id === 'audience';
   },
@@ -871,9 +1002,7 @@ var plugModules = {
     return isView(m) && m.prototype.id === 'header-panel-bar';
   },
   'plug/views/rooms/header/RoomHeaderView': function (m) {
-    return isView(m) && m.prototype.className === 'app-header' &&
-      'panels' in (new m) &&
-      'room' in (new m);
+    return isView(m) && m.prototype.className === 'app-header' && todo();
   },
   'plug/views/rooms/playback/PlaybackView': function (m) {
     return isView(m) && m.prototype.id === 'playback';
@@ -924,9 +1053,18 @@ var plugModules = {
 
 };
 
+var notMatched = []
 _.each(plugModules, function (filter, name) {
   var module = plugRequire(filter);
   if (module) {
+    module.longModuleName = name;
     setDefine(name, module);
   }
+  else {
+    notMatched.push(name);
+  }
 });
+
+// aliases
+// old settings module name (before 2015-02-06)
+alias('plug/settings/settings', 'plug/store/settings');
