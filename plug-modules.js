@@ -39,9 +39,25 @@ var plugRequire = function (fn) {
     i, module;
   for (i in defines) if (defines.hasOwnProperty(i)) {
     module = defines[i];
-    if (module && fn(module)) {
+    if (module && fn(module, i)) {
       module.originalModuleName = i;
       return module;
+    }
+  }
+};
+
+/**
+ * Find the name of a given module.
+ *
+ * @param {Object} module The module.
+ * @return {string} Original module name.
+ */
+var reverseFindModuleName = function (module) {
+  var defines = require.s.contexts._.defined,
+    i;
+  for (i in defines) if (defines.hasOwnProperty(i)) {
+    if (defines[i] && defines[i] === module) {
+      return i;
     }
   }
 };
@@ -195,9 +211,10 @@ var todo = function () {
  *
  * @return {bool} True if the module is in the same namespace, false otherwise.
  */
-var isInSameNamespace = function (module, otherModuleName) {
-  var otherModule = fastRequire(otherModuleName);
-  return todo();
+var isInSameNamespace = function (name, otherModuleName) {
+  var otherModule = fastRequire(otherModuleName),
+    otherName = otherModule && otherModule.originalModuleName;
+  return otherName && otherName.substr(0, otherName.lastIndexOf('/')) === name.substr(0, name.lastIndexOf('/'));
 };
 
 /**
@@ -287,7 +304,8 @@ var plugModules = {
   },
   'plug/actions/soundcloud/SoundCloudPermalinkService': function (m) {
     return _.isFunction(m) && functionContains(m.prototype.load, 'api.soundcloud.com/tracks') &&
-      functionContains(m.prototype.onComplete, 'permalink_url');
+      !functionContains(m.prototype.onError, 'Search') &&
+      _.isFunction(m.prototype.onComplete);
   },
   'plug/actions/staff/StaffListAction': commandModule('GET', 'staff'),
   'plug/actions/staff/StaffRemoveAction': commandModule('DELETE', 'staff/'),
@@ -296,16 +314,18 @@ var plugModules = {
   'plug/actions/store/PurchaseAction': commandModule('POST', 'store/purchase'),
   'plug/actions/store/ProductsAction': commandModule('GET', 'store/products'),
   'plug/actions/store/InventoryAction': commandModule('GET', 'store/inventory'),
-  'plug/actions/user/ValidateNameAction': commandModule('GET', 'users/validate/'),
-  'plug/actions/user/SetStatusAction': commandModule('PUT', 'users/status'),
-  'plug/actions/user/SetLanguageAction': commandModule('PUT', 'users/language'),
-  'plug/actions/user/SetAvatarAction': commandModule('PUT', 'users/avatar'),
-  'plug/actions/user/SetBadgeAction': commandModule('PUT', 'users/badge'),
-  'plug/actions/user/MeAction': commandModule('GET', '"users/me"'),
-  'plug/actions/user/ListTransactionsAction': commandModule('GET', 'users/me/transactions'),
-  'plug/actions/user/UserHistoryAction': commandModule('GET', 'users/me/history'),
-  'plug/actions/user/UserFindAction': commandModule('GET', 'users/"+this.data'),
-  'plug/actions/user/BulkFindAction': commandModule('POST', 'users/bulk'),
+  'plug/actions/users/ValidateNameAction': commandModule('GET', 'users/validate/'),
+  'plug/actions/users/SetStatusAction': commandModule('PUT', 'users/status'),
+  'plug/actions/users/SetLanguageAction': commandModule('PUT', 'users/language'),
+  'plug/actions/users/SetAvatarAction': commandModule('PUT', 'users/avatar'),
+  'plug/actions/users/SetBadgeAction': commandModule('PUT', 'users/badge'),
+  'plug/actions/users/MeAction': commandModule('GET', '"users/me"'),
+  'plug/actions/users/ListTransactionsAction': commandModule('GET', 'users/me/transactions'),
+  'plug/actions/users/UserHistoryAction': commandModule('GET', 'users/me/history'),
+  'plug/actions/users/UserFindAction': commandModule('GET', 'users/"+this.data'),
+  'plug/actions/users/BulkFindAction': commandModule('POST', 'users/bulk'),
+  'plug/actions/users/SendGiftAction': commandModule('POST', 'gift'),
+  'plug/actions/users/SaveSettingsAction': commandModule('PUT', 'users/settings'),
   'plug/actions/youtube/YouTubePlaylistService': function (m) {
     return _.isFunction(m) && _.isFunction(m.prototype.sortByName) && _.isFunction(m.prototype.next);
   },
@@ -527,7 +547,7 @@ var plugModules = {
       m.comparator(fakeRoomA, fakeRoomB) === 1 &&
       m.comparator(fakeRoomC, fakeRoomB) === -1;
   },
-  'plug/collections/friendRequests': todo,
+  // 'plug/collections/friendRequests': matched later,
   'plug/collections/friends': function (m) {
     return isCollectionOf(m, fastRequire('plug/models/User')) &&
       _.isFunction(m.onUsersAdd) &&
@@ -640,7 +660,8 @@ var plugModules = {
     return isView(m) && m.prototype.id === 'dashboard';
   },
   'plug/views/dashboard/SearchView': function (m) {
-    return isView(m) && m.prototype.className === 'search' && _.isFunction(m.prototype.clear);
+    return isView(m) && m.prototype.className === 'search' && _.isFunction(m.prototype.clear) &&
+      m.prototype.template === fastRequire('hbs!templates/dashboard/Search');
   },
   'plug/views/dashboard/TutorialView': function (m) {
     return isView(m) && m.prototype.id === 'tutorial';
@@ -648,15 +669,24 @@ var plugModules = {
   'plug/views/dashboard/list/CellView': function (m) {
     return isView(m) && _.isFunction(m.prototype.onFavorite) && _.isFunction(m.prototype.onFriends);
   },
-  'plug/views/dashboard/list/GridMenuView': todo,
+  'plug/views/dashboard/list/GridView': function (m, name) {
+    return isView(m) && m.prototype.className === 'grid' &&
+      isInSameNamespace(name, 'plug/views/dashboard/list/CellView');
+  },
   'plug/views/dashboard/list/TabMenuView': function (m) {
     return isView(m) && m.prototype.className === 'tab-menu' && _.isFunction(m.prototype.select);
   },
-  'plug/views/dashboard/header/DashboardHeaderView': todo,
+  'plug/views/dashboard/header/DashboardHeaderView': function (m) {
+    return isView(m) && m.prototype.className === 'app-header' &&
+      viewHasElement(m, '.event-calendar');
+  },
   'plug/views/dashboard/news/NewsView': function (m) {
     return isView(m) && m.prototype.id === 'news';
   },
-  'plug/views/dashboard/news/NewsRowView': todo,
+  'plug/views/dashboard/news/NewsRowView': function (m, name) {
+    return isView(m) && m.prototype.className === 'row' &&
+      isInSameNamespace(name, 'plug/views/dashboard/news/NewsView');
+  },
 
   // footer
   'plug/views/footer/FacebookMenuView': function (m) {
@@ -840,20 +870,23 @@ var plugModules = {
   'plug/views/users/communities/CommunitiesView': function (m) {
     return isView(m) && m.prototype.id === 'user-communities';
   },
-  'plug/views/users/communities/CommunityGridView': todo,
+  'plug/views/users/communities/CommunityGridView': function (m, name) {
+    return isView(m) && m.prototype.className === 'grid' &&
+      isInSameNamespace(name, 'plug/views/users/communities/CommunitiesView');
+  },
   'plug/views/users/friends/FriendsView': function (m) {
     return isView(m) && m.prototype.id === 'user-friends';
   },
-  'plug/views/users/friends/FriendsTabMenuView': function (m) {
+  'plug/views/users/friends/FriendsTabMenuView': function (m, name) {
     return isView(m) && m.prototype.className === 'tab-menu' &&
-      isInSameNamespace(m, 'plug/views/users/friends/FriendsView');
+      isInSameNamespace(name, 'plug/views/users/friends/FriendsView');
   },
   'plug/views/users/friends/FriendRowView': function (m) {
     return isView(m) && m.prototype.className === 'row' &&
       m.prototype.buttonTemplate === fastRequire('hbs!templates/user/friends/UserFriendButtons');
   },
   'plug/views/users/friends/FriendsListView': function (m) {
-    return isView(m) && m.prototype.className === 'requests section' &&
+    return isView(m) && m.prototype.className === 'all section' &&
       m.prototype.RowClass === fastRequire('plug/views/users/friends/FriendRowView');
   },
   'plug/views/users/friends/FriendRequestRowView': function (m) {
@@ -864,10 +897,10 @@ var plugModules = {
     return isView(m) && m.prototype.className === 'requests section' &&
       m.prototype.RowClass === fastRequire('plug/views/users/friends/FriendRequestRowView');
   },
-  'plug/views/users/friends/ListView': function (m) {
-    return isView(m) && 'className' in m.prototype && 'RowClass' in m.prototype &&
-      m.prototype.className === undefined && m.prototype.RowClass === undefined &&
-      isInSameNamespace(m, 'plug/views/users/friends/FriendsView');
+  'plug/views/users/friends/ListView': function (m, name) {
+    return isView(m) && 'collection' in m.prototype && 'RowClass' in m.prototype &&
+      m.prototype.collection === undefined && m.prototype.RowClass === undefined &&
+      isInSameNamespace(name, 'plug/views/users/friends/FriendsView');
   },
   'plug/views/users/friends/SearchView': function (m) {
     return isView(m) && m.prototype.template === fastRequire('hbs!templates/user/friends/Search');
@@ -1053,7 +1086,7 @@ var plugModules = {
 
 };
 
-var notMatched = []
+var notMatched = [];
 _.each(plugModules, function (filter, name) {
   var module = plugRequire(filter);
   if (module) {
@@ -1068,3 +1101,31 @@ _.each(plugModules, function (filter, name) {
 // aliases
 // old settings module name (before 2015-02-06)
 alias('plug/settings/settings', 'plug/store/settings');
+// old user actions path (before 2015-02-24)
+alias('plug/actions/user/ValidateNameAction',     'plug/actions/users/ValidateNameAction');
+alias('plug/actions/user/SetStatusAction',        'plug/actions/users/SetStatusAction');
+alias('plug/actions/user/SetLanguageAction',      'plug/actions/users/SetLanguageAction');
+alias('plug/actions/user/SetAvatarAction',        'plug/actions/users/SetAvatarAction');
+alias('plug/actions/user/SetBadgeAction',         'plug/actions/users/SetBadgeAction');
+alias('plug/actions/user/MeAction',               'plug/actions/users/MeAction');
+alias('plug/actions/user/ListTransactionsAction', 'plug/actions/users/ListTransactionsAction');
+alias('plug/actions/user/UserHistoryAction',      'plug/actions/users/UserHistoryAction');
+alias('plug/actions/user/UserFindAction',         'plug/actions/users/UserFindAction');
+alias('plug/actions/user/BulkFindAction',         'plug/actions/users/BulkFindAction');
+
+// modules that could not be matched easily, but can be reached by other means
+var plugModules2 = {
+  'plug/collections/friendRequests': function () {
+    var FriendRequestsView = fastRequire('plug/views/users/friends/FriendRequestsView');
+    return FriendRequestsView.prototype.collection;
+  }
+};
+
+_.each(plugModules2, function (fetcher, name) {
+  var module = fetcher();
+  if (module) {
+    module.originalModuleName = reverseFindModuleName(module);
+    module.longModuleName = name;
+    setDefine(name, module);
+  }
+});
