@@ -78,18 +78,6 @@ var functionContains = function (fn, match) {
 };
 
 /**
- * Creates a function that matches a View class with the given element ID.
- *
- * @param {string} id ID.
- * @return {function()} Matcher function.
- */
-var viewModuleById = function (id) {
-  return function (m) {
-    return isView(m) && m.prototype.id === id;
-  };
-};
-
-/**
  * Checks if a given module is a View class.
  *
  * @param {Object} m Module.
