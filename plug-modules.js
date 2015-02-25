@@ -1,3 +1,5 @@
+window.plugModules = (function () {
+
 /**
  * Adds a module definition.
  *
@@ -163,7 +165,7 @@ function Context() {
 }
 Context.prototype.require = function (path) {
   var defined = require.s.contexts._.defined;
-  return defined[path] || (this._nameMapping[path] && this.require(this._nameMapping[path]));
+  return defined[path] || (this._nameMapping[path] && this.require(this._nameMapping[path])) || undefined;
 };
 Context.prototype.isDefined = function (path) {
   return typeof this.require(path) !== 'undefined';
@@ -175,7 +177,8 @@ Context.prototype.define = function (newPath, oldPath) {
 Context.prototype.setNotFound = function (path) {
   this._notFound.push(path);
 };
-Context.prototype.applyDefines = function () {
+// Add the new names to the global module registry
+Context.prototype.register = function () {
   for (var newName in this._nameMapping) if (this._nameMapping.hasOwnProperty(newName)) {
     require.s.contexts._.defined[newName] = this.require(newName);
   }
@@ -1226,3 +1229,7 @@ context.define('plug/actions/user/ListTransactionsAction', 'plug/actions/users/L
 context.define('plug/actions/user/UserHistoryAction',      'plug/actions/users/UserHistoryAction');
 context.define('plug/actions/user/UserFindAction',         'plug/actions/users/UserFindAction');
 context.define('plug/actions/user/BulkFindAction',         'plug/actions/users/BulkFindAction');
+
+return context;
+
+}())
