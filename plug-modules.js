@@ -247,6 +247,28 @@ SimpleMatcher.prototype.match = function (context, module, name) {
 };
 
 /**
+ * A StepwiseMatcher finds a module definition that matches a function.
+ * Some setup and cleanup can be done around the matcher, for example
+ * to set up some mutations that you can use to detect the right definition.
+ */
+function StepwiseMatcher(steps) {
+  SimpleMatcher.call(this, steps.check);
+
+  this._setup = steps.setup;
+  this._cleanup = steps.cleanup;
+}
+StepwiseMatcher.prototype = Object.create(SimpleMatcher.prototype);
+StepwiseMatcher.prototype.resolve = function (context) {
+  // step 1: setup
+  this._setup.call(context);
+  // step 2: run checks
+  var name = SimpleMatcher.prototype.resolve.call(this, context);
+  // step 3: cleanup
+  this._cleanup.call(context, context.require(name), name);
+  return name;
+};
+
+/**
  * An AndMatcher finds a module definition that matches two other Matchers.
  */
 function AndMatcher(a, b) {
@@ -689,14 +711,18 @@ var plugModules = {
   'plug/collections/bannedUsers': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/BannedUser'));
   }).needs('plug/models/BannedUser'),
-  'plug/collections/currentPlaylistFiltered': function (m) {
+  'plug/collections/currentPlaylist': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/Media'));
+  }).needs('plug/models/Media'),
+  'plug/collections/currentPlaylistFiltered': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/Media')) &&
       _.isFunction(m.setFilter) && _.isFunction(m.isActualFirst);
-  },
-  'plug/collections/dashboardRooms': function (m) {
+  }).needs('plug/models/Media'),
+  'plug/collections/dashboardRooms': new SimpleMatcher(function (m) {
     if (!isCollectionOf(m, this.require('plug/models/Room'))) {
       return false;
     }
+    // the dashboardRooms collection has its own comparator that we can check!
     var fakeRoomA = { get: function (key) { return key === 'population' ? 10 : 'a'; } },
         fakeRoomB = { get: function (key) { return key === 'population' ? 10 : 'b'; } },
         fakeRoomC = { get: function (key) { return key === 'population' ? 20 : 'c'; } };
@@ -704,7 +730,7 @@ var plugModules = {
       functionContains(m.comparator, 'name') &&
       m.comparator(fakeRoomA, fakeRoomB) === 1 &&
       m.comparator(fakeRoomC, fakeRoomB) === -1;
-  },
+  }).needs('plug/models/Room'),
   'plug/collections/friendRequests': new SimpleFetcher(function () {
     var FriendRequestsView = this.require('plug/views/users/friends/FriendRequestsView');
     return FriendRequestsView.prototype.collection;
@@ -717,43 +743,57 @@ var plugModules = {
       _.isFunction(m.onAdd) &&
       'MAX' in m.constructor;
   }).needs('plug/models/User'),
-  'plug/collections/history': function (m) {
-    return m instanceof Backbone.Collection && _.isFunction(m.onPointsChange);
-  },
-  'plug/collections/ignores': new SimpleMatcher(function (m) {
-    return isCollectionOf(m, this.require('plug/models/User')) &&
-      m.comparator === 'username' &&
-      // TODO
-      false;
-  }).needs('plug/models/User'),
+  'plug/collections/history': new SimpleFetcher(function () {
+    var RoomHistoryHandler = this.require('plug/handlers/RoomHistoryHandler');
+    return RoomHistoryHandler.prototype.collection;
+  }).needs('plug/handlers/RoomHistoryHandler'),
+  'plug/collections/ignores': new StepwiseMatcher({
+    // The IgnoreAction puts the received data in the `ignores` collection in the
+    // `parse` method. So here we pretend to have a new ignore, add it to the collection,
+    // and then find which collection was changed.
+    setup: function () {
+      var IgnoreAction = this.require('plug/actions/ignores/IgnoreAction');
+      var User = this.require('plug/models/User')
+      IgnoreAction.prototype.parse.call(
+        // fake context with an empty trigger function to
+        // 1) prevent an error, and
+        // 2) not show the notification box that this would otherwise show.
+        { trigger: function () {} },
+        // fake "response"
+        { code: 200, data: [ { id: -1000, username: '__test__' } ] }
+      );
+    },
+    check: function (m) {
+      return isCollectionOf(m, this.require('plug/models/User')) &&
+        m.comparator === 'username' &&
+        m.length > 0 && m.last().get('id') === -1000;
+    },
+    cleanup: function (ignores) {
+      // get rid of the fake user
+      ignores.pop();
+    }
+  }).needs('plug/models/User', 'plug/actions/ignores/IgnoreAction'),
   'plug/collections/imports': todo,
-  'plug/collections/myAvatars': function (m) {
-    return isCollectionOf(m, this.require('plug/models/Avatar')) && _.isFunction(m.onChange);
-  },
-  'plug/collections/myBadges': function (m) {
-    return isCollectionOf(m, this.require('plug/models/Badge')) && _.isFunction(m.onChange);
-  },
-  'plug/collections/mutes': function (m) {
+  'plug/collections/mutes': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/MutedUser'));
-  },
-  'plug/collections/notifications': function (m) {
+  }).needs('plug/models/MutedUser'),
+  'plug/collections/myAvatars': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/Avatar')) && _.isFunction(m.onChange);
+  }).needs('plug/models/Avatar'),
+  'plug/collections/myBadges': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/Badge')) && _.isFunction(m.onChange);
+  }).needs('plug/models/Badge'),
+  'plug/collections/notifications': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/Notification'));
-  },
-  'plug/collections/playlists': function (m) {
+  }).needs('plug/models/Notification'),
+  'plug/collections/playlists': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/Playlist')) &&
       _.isFunction(m.jumpToMedia) && _.isArray(m.activeMedia);
-  },
-  'plug/collections/currentPlaylist': new SimpleMatcher(function (m) {
-    return isCollectionOf(m, this.require('plug/models/Media'));
-  }).needs('plug/models/Media'),
+  }).needs('plug/models/Playlist'),
   'plug/collections/probablySoundCloudPlaylists': todo,
   'plug/collections/purchasableAvatars': todo,
   'plug/collections/searchResults2': todo,
   'plug/collections/searchResults': todo,
-  'plug/collections/staffFiltered': function (m) {
-    return isCollectionOf(m, this.require('plug/models/User')) && _.isFunction(m.setFilter) &&
-      !('sourceCollection' in m);
-  },
   // staff is only updated when a StaffListAction is triggered
   // eg. when the user navigates to the staff tab
   'plug/collections/staff': new SimpleMatcher(function (m) {
@@ -762,24 +802,32 @@ var plugModules = {
       !_.isFunction(m.getAudience) &&
       m.comparator === this.require('plug/util/comparators').role;
   }).needs('plug/models/User', 'plug/util/comparators'),
+  'plug/collections/staffFiltered': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/User')) && _.isFunction(m.setFilter) &&
+      !('sourceCollection' in m);
+  }).needs('plug/models/User'),
   'plug/collections/storeExtras': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/StoreExtra'));
   }).needs('plug/models/StoreExtra'),
-  'plug/collections/transactions': function (m) {
+  'plug/collections/transactions': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/Transaction'));
-  },
+  }).needs('plug/models/Transaction'),
   'plug/collections/__unknown0__': todo,
-  'plug/collections/userHistory': todo,
-  'plug/collections/userRooms': function (m) {
-    return isCollectionOf(m, this.require('plug/models/Room')) && todo();
-  },
+  'plug/collections/userHistory': new SimpleFetcher(function () {
+    var UserHistoryHandler = this.require('plug/handlers/UserHistoryHandler');
+    return UserHistoryHandler.prototype.collection;
+  }).needs('plug/handlers/UserHistoryHandler'),
+  'plug/collections/userRooms': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/Room')) &&
+      m !== this.require('plug/collections/dashboardRooms');
+  }).needs('plug/models/Room', 'plug/collections/dashboardRooms'),
   'plug/collections/users': function (m) {
     return m instanceof Backbone.Collection && _.isFunction(m.getAudience);
   },
-  'plug/collections/usersFiltered': function (m) {
+  'plug/collections/usersFiltered': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/User')) && _.isFunction(m.setFilter) &&
       'sourceCollection' in m;
-  },
+  }).needs('plug/models/User'),
   'plug/collections/waitlist': function (m) {
     return m instanceof Backbone.Collection && 'isTheUserPlaying' in m;
   },
