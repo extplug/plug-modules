@@ -1,42 +1,6 @@
 window.plugModules = (function () {
 
 /**
- * Adds a module definition.
- *
- * @param {string} name Module name.
- * @param {*} module Module definition. (Not its factory!)
- */
-var setDefine = function (name, module) {
-  require.s.contexts._.defined[name] = module;
-};
-
-/**
- * Fast require using require.js's internal registry.
- *
- * @param {string} name Module name.
- * @return Module definition, if found.
- */
-var fastRequire = function (name) {
-  return require.s.contexts._.defined[name];
-}
-
-/**
- * Find the name of a given module.
- *
- * @param {Object} module The module.
- * @return {string} Original module name.
- */
-var reverseFindModuleName = function (module) {
-  var defines = require.s.contexts._.defined,
-    i;
-  for (i in defines) if (defines.hasOwnProperty(i)) {
-    if (defines[i] && defines[i] === module) {
-      return i;
-    }
-  }
-};
-
-/**
  * Tests if a module is a collection of a certain type of Model.
  *
  * @param {Object} m Module.
@@ -142,20 +106,6 @@ var todo = function () {
 };
 
 /**
- * Matcher function that checks if a given module was defined in the same namespace as an other module.
- *
- * @param {Object} module          Module to check.
- * @param {string} otherModuleName Module name of a different module in the wanted namespace.
- *
- * @return {bool} True if the module is in the same namespace, false otherwise.
- */
-var isInSameNamespace = function (name, otherModuleName) {
-  var otherModule = fastRequire(otherModuleName),
-    otherName = otherModule && otherModule.originalModuleName;
-  return otherName && otherName.substr(0, otherName.lastIndexOf('/')) === name.substr(0, name.lastIndexOf('/'));
-};
-
-/**
  * The Context keeps track of the long names, and provides some convenience methods
  * for working with renamed modules.
  */
@@ -163,6 +113,9 @@ function Context() {
   this._nameMapping = {};
   this._notFound = [];
 }
+Context.prototype.resolveName = function (path) {
+  return this._nameMapping[path] ? this.resolveName(this._nameMapping[path]) : path;
+};
 Context.prototype.require = function (path) {
   var defined = require.s.contexts._.defined;
   return defined[path] || (this._nameMapping[path] && this.require(this._nameMapping[path])) || undefined;
@@ -177,6 +130,10 @@ Context.prototype.define = function (newPath, oldPath) {
 Context.prototype.setNotFound = function (path) {
   this._notFound.push(path);
 };
+Context.prototype.isInSameNamespace = function (name, otherModuleName) {
+  var otherName = this.resolveName(otherModuleName);
+  return otherName && otherName.substr(0, otherName.lastIndexOf('/')) === name.substr(0, name.lastIndexOf('/'));
+}
 // Add the new names to the global module registry
 Context.prototype.register = function () {
   for (var newName in this._nameMapping) if (this._nameMapping.hasOwnProperty(newName)) {
@@ -190,6 +147,8 @@ Context.prototype.register = function () {
 function Detective() {
   this._needs = [];
 }
+// Define dependencies. This ensures that this Detective will only run
+// once the given modules have been found.
 Detective.prototype.needs = function () {
   this._needs = this._needs.concat(Array.prototype.slice.call(arguments));
   return this;
@@ -238,6 +197,28 @@ Matcher.prototype.and = function (matcher) {
   }
   return new AndMatcher(this, matcher);
 };
+
+/**
+ * A Fetcher finds a module definition by itself. Usually it will use other, known, modules
+ * and "navigate" to a place that references target module.
+ */
+function Fetcher() {
+  Detective.call(this);
+}
+Fetcher.prototype = Object.create(Detective.prototype);
+Fetcher.prototype.resolve = function (context) {
+  var module = this.fetch(context);
+  if (module) {
+    // find module name
+    var defines = require.s.contexts._.defined,
+      name;
+    for (name in defines) if (defines.hasOwnProperty(name)) {
+      if (defines[name] && defines[name] === module) {
+        return name;
+      }
+    }
+  }
+}
 
 /**
  * A SimpleMatcher finds a module definition that matches a function.
@@ -302,20 +283,34 @@ ActionMatcher.prototype.match = function (context, module, name) {
 };
 
 /**
- * A Fetcher finds a module definition by itself. Usually it will use other, known, modules
- * and "navigate" to the target module.
+ * A SimpleFetcher allows a given function to find a module definition.
  */
-function Fetcher(fn) {
+function SimpleFetcher(fn) {
   Detective.call(this);
 
   this._fetch = fn;
 }
-Fetcher.prototype = Object.create(Detective.prototype);
-Fetcher.prototype.resolve = function (context) {
-  var module = this._fetch.call(context);
-  if (module) {
-    return reverseFindModuleName(module);
-  }
+SimpleFetcher.prototype = Object.create(Fetcher.prototype);
+SimpleFetcher.prototype.fetch = function (context) {
+  return this._fetch.call(context);
+};
+
+/**
+ * A HandlerFetcher finds a module definition of a plug.dj Event Handler that handles a specific event.
+ */
+function HandlerFetcher(eventName) {
+  Detective.call(this);
+
+  this._eventName = eventName;
+  this.needs('plug/core/EventManager');
+}
+HandlerFetcher.prototype = Object.create(Fetcher.prototype);
+HandlerFetcher.prototype.fetch = function (context) {
+  var events = context.require('plug/core/EventManager').eventTypeMap;
+  if (!events) return false;
+  var eventTypes = events[this._eventName];
+  // Luckily for us, none of the events have multiple handlers at the moment!
+  return eventTypes && eventTypes[0];
 };
 
 /**
@@ -561,6 +556,54 @@ var plugModules = {
   }),
   'plug/events/UserListEvent': new EventMatcher('UserListEvent'),
 
+  'plug/handlers/GrabHandler': new HandlerFetcher('MediaGrabEvent:grab'),
+  'plug/handlers/MediaUpdateHandler': new HandlerFetcher('MediaUpdateEvent:update'),
+  'plug/handlers/PlaylistDeleteHandler': new HandlerFetcher('PlaylistDeleteEvent:delete'),
+  'plug/handlers/ListPlaylistsHandler': new HandlerFetcher('PlaylistActionEvent:sync'),
+  'plug/handlers/NameChangeHandler': new HandlerFetcher('StoreEvent:purchaseName'),
+  'plug/handlers/StaffListHandler': new HandlerFetcher('UserListEvent:staff'),
+  'plug/handlers/ImportYouTubeHandler': new HandlerFetcher('ImportYouTubeEvent:import'),
+  'plug/handlers/PreviewHandler': new HandlerFetcher('PreviewEvent:preview'),
+  'plug/handlers/FacebookLoginHandler': new HandlerFetcher('FacebookLoginEvent:login'),
+  'plug/handlers/ListIgnoresHandler': new HandlerFetcher('UserListEvent:ignores'),
+  'plug/handlers/PlaylistRenameHandler': new HandlerFetcher('PlaylistRenameEvent:rename'),
+  'plug/handlers/UserBadgesHandler': new HandlerFetcher('StoreEvent:userBadges'),
+  'plug/handlers/RoomCreateHandler': new HandlerFetcher('RoomCreateEvent:create'),
+  'plug/handlers/MediaDeleteHandler': new HandlerFetcher('MediaDeleteEvent:delete'),
+  'plug/handlers/ImportSoundCloudHandler': new HandlerFetcher('ImportSoundCloudEvent:sets'),
+  'plug/handlers/ListInvitesHandler': new HandlerFetcher('UserEvent:invites'),
+  'plug/handlers/UserRolloverHandler': new HandlerFetcher('ShowUserRolloverEvent:show'),
+  'plug/handlers/DJHandler': new HandlerFetcher('DJEvent:join'),
+  'plug/handlers/ListBansHandler': new HandlerFetcher('UserListEvent:bans'),
+  'plug/handlers/BoostPurchaseHandler': new HandlerFetcher('StoreEvent:purchaseBoost'),
+  'plug/handlers/RoomHistoryHandler': new HandlerFetcher('HistorySyncEvent:room'),
+  'plug/handlers/RoomJoinHandler': new HandlerFetcher('RoomEvent:join'),
+  'plug/handlers/StoreBadgesHandler': new HandlerFetcher('StoreEvent:storeBadges'),
+  'plug/handlers/PlaylistLoadHandler': new HandlerFetcher('PlaylistActionEvent:load'),
+  'plug/handlers/StoreAvatarsHandler': new HandlerFetcher('StoreEvent:storeAvatars'),
+  'plug/handlers/CustomRoomHandler': new HandlerFetcher('CustomRoomEvent:custom'),
+  'plug/handlers/AvatarPurchaseHandler': new HandlerFetcher('StoreEvent:purchaseAvatar'),
+  'plug/handlers/MediaPlayHandler': new HandlerFetcher('PlayMediaEvent:play'),
+  'plug/handlers/ModerateHandler': new HandlerFetcher('ModerateEvent:skip'),
+  'plug/handlers/UnmuteHandler': new HandlerFetcher('ModerateEvent:unmute'),
+  'plug/handlers/ListMutesHandler': new HandlerFetcher('UserListEvent:mutes'),
+  'plug/handlers/RestrictedSearchHandler': new HandlerFetcher('RestrictedSearchEvent:search'),
+  'plug/handlers/PlaylistUpdateHandler': new HandlerFetcher('PlaylistActionEvent:rename'),
+  'plug/handlers/FriendHandler': new HandlerFetcher('UserEvent:accept'),
+  'plug/handlers/PlaylistActivateHandler': new HandlerFetcher('PlaylistActionEvent:activate'),
+  'plug/handlers/ListFriendsHandler': new HandlerFetcher('UserEvent:friends'),
+  'plug/handlers/StoreMiscHandler': new HandlerFetcher('StoreEvent:storeMisc'),
+  'plug/handlers/RoomStateHandler': new HandlerFetcher('RoomEvent:state'),
+  'plug/handlers/MediaHandler': new HandlerFetcher('MediaActionEvent:add'),
+  'plug/handlers/MediaInsertHandler': new HandlerFetcher('MediaInsertEvent:insert'),
+  'plug/handlers/AlertHandler': new HandlerFetcher('AlertEvent:alert'),
+  'plug/handlers/UserMeHandler': new HandlerFetcher('UserEvent:me'),
+  'plug/handlers/BadgePurchaseHandler': new HandlerFetcher('StoreEvent:purchaseBadge'),
+  'plug/handlers/UserAvatarsHandler': new HandlerFetcher('StoreEvent:userAvatars'),
+  'plug/handlers/StoreTransactionsHandler': new HandlerFetcher('StoreEvent:userTransactions'),
+  'plug/handlers/MediaMoveHandler': new HandlerFetcher('MediaMoveEvent:move'),
+  'plug/handlers/RelatedBackHandler': new HandlerFetcher('RelatedBackEvent:back'),
+
   'plug/models/Avatar': function (m) {
     return m.AUDIENCE && m.DJ && _.isObject(m.IMAGES);
   },
@@ -633,7 +676,7 @@ var plugModules = {
   'plug/collections/bannedUsers': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/BannedUser'));
   }).needs('plug/models/BannedUser'),
-  'plug/collections/currentPlaylistFilter': function (m) {
+  'plug/collections/currentPlaylistFiltered': function (m) {
     return isCollectionOf(m, this.require('plug/models/Media')) &&
       _.isFunction(m.setFilter) && _.isFunction(m.isActualFirst);
   },
@@ -649,7 +692,7 @@ var plugModules = {
       m.comparator(fakeRoomA, fakeRoomB) === 1 &&
       m.comparator(fakeRoomC, fakeRoomB) === -1;
   },
-  'plug/collections/friendRequests': new Fetcher(function () {
+  'plug/collections/friendRequests': new SimpleFetcher(function () {
     var FriendRequestsView = this.require('plug/views/users/friends/FriendRequestsView');
     return FriendRequestsView.prototype.collection;
   }).needs('plug/views/users/friends/FriendRequestsView'),
@@ -664,7 +707,12 @@ var plugModules = {
   'plug/collections/history': function (m) {
     return m instanceof Backbone.Collection && _.isFunction(m.onPointsChange);
   },
-  'plug/collections/ignores': todo,
+  'plug/collections/ignores': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/User')) &&
+      m.comparator === 'username' &&
+      // TODO
+      false;
+  }).needs('plug/models/User'),
   'plug/collections/imports': todo,
   'plug/collections/myAvatars': function (m) {
     return isCollectionOf(m, this.require('plug/models/Avatar')) && _.isFunction(m.onChange);
@@ -776,7 +824,7 @@ var plugModules = {
   },
   'plug/views/dashboard/list/GridView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'grid' &&
-      isInSameNamespace(name, 'plug/views/dashboard/list/CellView');
+      this.isInSameNamespace(name, 'plug/views/dashboard/list/CellView');
   }).needs('plug/views/dashboard/list/CellView'),
   'plug/views/dashboard/list/TabMenuView': function (m) {
     return isView(m) && m.prototype.className === 'tab-menu' && _.isFunction(m.prototype.select);
@@ -790,7 +838,7 @@ var plugModules = {
   },
   'plug/views/dashboard/news/NewsRowView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'row' &&
-      isInSameNamespace(name, 'plug/views/dashboard/news/NewsView');
+      this.isInSameNamespace(name, 'plug/views/dashboard/news/NewsView');
   }).needs('plug/views/dashboard/news/NewsView'),
 
   // footer
@@ -928,7 +976,9 @@ var plugModules = {
     return isView(m) && m.prototype.id === 'playlist-panel';
   },
   'plug/views/playlists/help/PlaylistHelpView': function (m) {
-    return isView(m) && viewHasElement(m, '.playlist-overlay-help');
+    return isView(m) && m.prototype.className === 'media-list' &&
+      _.isFunction(m.prototype.onResize)
+      viewHasElement(m, '.playlist-overlay-help');
   },
   'plug/views/playlists/import/PlaylistImportPanelView': function (m) {
     return isView(m) && m.prototype.id === 'playlist-import-panel';
@@ -977,14 +1027,14 @@ var plugModules = {
   },
   'plug/views/users/communities/CommunityGridView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'grid' &&
-      isInSameNamespace(name, 'plug/views/users/communities/CommunitiesView');
+      this.isInSameNamespace(name, 'plug/views/users/communities/CommunitiesView');
   }).needs('plug/views/users/communities/CommunitiesView'),
   'plug/views/users/friends/FriendsView': function (m) {
     return isView(m) && m.prototype.id === 'user-friends';
   },
   'plug/views/users/friends/FriendsTabMenuView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'tab-menu' &&
-      isInSameNamespace(name, 'plug/views/users/friends/FriendsView');
+      this.isInSameNamespace(name, 'plug/views/users/friends/FriendsView');
   }).needs('plug/views/users/friends/FriendsView'),
   'plug/views/users/friends/FriendRowView': function (m) {
     return isView(m) && m.prototype.className === 'row' &&
@@ -1005,7 +1055,7 @@ var plugModules = {
   'plug/views/users/friends/ListView': new SimpleMatcher(function (m, name) {
     return isView(m) && 'collection' in m.prototype && 'RowClass' in m.prototype &&
       m.prototype.collection === undefined && m.prototype.RowClass === undefined &&
-      isInSameNamespace(name, 'plug/views/users/friends/FriendsView');
+      this.isInSameNamespace(name, 'plug/views/users/friends/FriendsView');
   }).needs('plug/views/users/friends/FriendsView'),
   'plug/views/users/friends/SearchView': function (m) {
     return isView(m) && m.prototype.template === this.require('hbs!templates/user/friends/Search');
@@ -1028,14 +1078,28 @@ var plugModules = {
     return isView(m) && m.prototype.className === 'dropdown' &&
       functionContains(m.prototype.draw, '.userAvatars.base');
   },
-  'plug/views/users/inventory/AvatarCellView': todo,
+  'plug/views/users/inventory/AvatarCellView': new SimpleMatcher(function (m, name) {
+    return isView(m) && m.prototype.className === 'cell' &&
+      _.isFunction(m.prototype.getBlinkFrame) &&
+     this.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView');
+  }).needs('plug/views/users/inventory/InventoryView'),
   'plug/views/users/inventory/BadgesView': new SimpleMatcher(function (m) {
     return isView(m) && m.prototype.className === 'badges' &&
       m.prototype.eventName === this.require('plug/events/StoreEvent').GET_USER_BADGES;
   }).needs('plug/events/StoreEvent'),
-  'plug/views/users/inventory/BadgeCellView': todo,
-  'plug/views/users/inventory/TransactionHistoryView': todo,
-  'plug/views/users/inventory/TransactionRowView': todo,
+  'plug/views/users/inventory/BadgeCellView': function (m, name) {
+    return isView(m) && m.prototype.className === 'cell' &&
+      functionContains(m.prototype.render, 'change:badge');
+  },
+  'plug/views/users/inventory/TransactionHistoryView': new SimpleMatcher(function (m, name) {
+    return isView(m) && m.prototype.className === 'history' &&
+     functionContains(m.prototype.render, 'GET_USER_TRANSACTIONS') &&
+     this.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView');
+  }).needs('plug/views/users/inventory/InventoryView'),
+  'plug/views/users/inventory/TransactionRowView': function (m) {
+    return isView(m) && m.prototype.className === 'row' &&
+      functionContains(m.prototype.render, 'boost3x');
+  },
   'plug/views/users/profile/ExperienceView': function (m) {
     return isView(m) && m.prototype.className === 'experience section';
   },
@@ -1204,6 +1268,7 @@ _.each(plugModules, function (matcher, name) {
 
 var notFound = [];
 var context = new Context();
+// < 5000 to prevent an infinite loop if a detective's dependency was not found.
 for (var i = 0; i < detectives.length && i < 5000; i++) {
   var current = detectives[i];
   if (current.detective.isReady(context)) {
@@ -1214,21 +1279,6 @@ for (var i = 0; i < detectives.length && i < 5000; i++) {
     detectives.push(current);
   }
 }
-
-// aliases
-// old settings module name (before 2015-02-06)
-context.define('plug/settings/settings',                   'plug/store/settings');
-// old user actions path (before 2015-02-24)
-context.define('plug/actions/user/ValidateNameAction',     'plug/actions/users/ValidateNameAction');
-context.define('plug/actions/user/SetStatusAction',        'plug/actions/users/SetStatusAction');
-context.define('plug/actions/user/SetLanguageAction',      'plug/actions/users/SetLanguageAction');
-context.define('plug/actions/user/SetAvatarAction',        'plug/actions/users/SetAvatarAction');
-context.define('plug/actions/user/SetBadgeAction',         'plug/actions/users/SetBadgeAction');
-context.define('plug/actions/user/MeAction',               'plug/actions/users/MeAction');
-context.define('plug/actions/user/ListTransactionsAction', 'plug/actions/users/ListTransactionsAction');
-context.define('plug/actions/user/UserHistoryAction',      'plug/actions/users/UserHistoryAction');
-context.define('plug/actions/user/UserFindAction',         'plug/actions/users/UserFindAction');
-context.define('plug/actions/user/BulkFindAction',         'plug/actions/users/BulkFindAction');
 
 return context;
 
