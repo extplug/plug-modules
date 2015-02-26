@@ -5,19 +5,19 @@ Maps plug.dj defined modules to reasonable names, so you can more easily access 
 After applying this script, you can access plug.dj modules like:
 
 ```javascript
-var SubClass = require('plug/core/Class').extend({ /* class definition */ });
+var SubClass = plugModules.require('plug/core/Class').extend({ /* class definition */ });
 
-require('plug/core/Events').trigger('notify', 'icon-plug-dj', 'Notification text');
+plugModules.require('plug/core/Events').trigger('notify', 'icon-plug-dj', 'Notification text');
 ```
 
 Or make yourself an admin locally:
 
 ```javascript
-var currentUser = require('plug/models/currentUser');
+var currentUser = plugModules.require('plug/models/currentUser');
 currentUser.set('gRole', 5);
 ```
 
-`require()` modules in your browser's developer console or use [replug](https://github.com/PlugLynn/replug) to figure out what the different modules are for, and what you can do with/to them.
+`plugModules.require()` modules in your browser's developer console or use [replug](https://github.com/PlugLynn/replug) to figure out what the different modules are for, and what you can do with/to them.
 
 ## Warning!
 
