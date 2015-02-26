@@ -968,10 +968,10 @@ var plugModules = {
   'plug/views/dialogs/BadgeUnlockedDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-badge-unlocked';
   },
-  // BoothLockDialog is the only dialog with a "dialog-confirm" id and a "destructive" class.
   'plug/views/dialogs/BoothLockDialog': function (m) {
+    // BoothLockDialog pretends to be a confirm dialog! ):
     return isDialog(m) && m.prototype.id === 'dialog-confirm' &&
-      m.prototype.className.indexOf('destructive') !== -1;
+      functionContains(m.prototype.adjustTop, 'dialog.lockBoothCancel');
   },
   'plug/views/dialogs/ConfirmDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-confirm';
