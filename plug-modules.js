@@ -979,6 +979,12 @@ var plugModules = {
   'plug/views/dialogs/ForceSkipDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-skip';
   },
+  'plug/views/dialogs/GiftSendDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-gift-send';
+  },
+  'plug/views/dialogs/GiftReceiveDialog': function (m) {
+    return isDialog(m) && m.prototype.id === 'dialog-gift-receive';
+  },
   'plug/views/dialogs/LevelUpDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-level-up';
   },
