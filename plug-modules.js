@@ -1270,17 +1270,76 @@ var plugModules = {
   'plug/views/rooms/header/HeaderPanelBarView': function (m) {
     return isView(m) && m.prototype.id === 'header-panel-bar';
   },
-  'plug/views/rooms/header/RoomHeaderView': function (m) {
-    return isView(m) && m.prototype.className === 'app-header' && todo();
-  },
+  'plug/views/rooms/header/RoomHeaderView': new SimpleMatcher(function (m, name) {
+    return isView(m) && m.prototype.className === 'app-header' &&
+      this.isInSameNamespace(name, 'plug/views/rooms/header/HeaderPanelBarView');
+  }).needs('plug/views/rooms/header/HeaderPanelBarView'),
   'plug/views/rooms/playback/PlaybackView': function (m) {
     return isView(m) && m.prototype.id === 'playback';
   },
   'plug/views/rooms/playback/VolumeView': function (m) {
     return isView(m) && m.prototype.id === 'volume';
   },
-  'plug/views/rooms/users/RoomUserRowView': function (m) {
-    return _.isFunction(m) && _.isFunction(m.prototype.vote);
+  'plug/views/rooms/users/BansListView': function (m) {
+    return isView(m) && m.prototype.className === 'list bans';
+  },
+  'plug/views/rooms/users/BanRowView': new SimpleFetcher(function () {
+    var BansListView = this.require('plug/views/rooms/users/BansListView');
+    return BansListView.prototype.RowClass;
+  }).needs('plug/views/rooms/users/BansListView'),
+  'plug/views/rooms/users/FriendsListView': function (m) {
+    return isView(m) && m.prototype.className === 'friends';
+  },
+  'plug/views/rooms/users/FriendRowView': new SimpleMatcher(function (m, name) {
+   return isView(m) && m.prototype.className === 'row' &&
+     _.isFunction(m.prototype.onAvatarChange) &&
+     _.isFunction(m.prototype.onStatusChange) &&
+     this.isInSameNamespace(name, 'plug/views/rooms/users/FriendsListView');
+  }).needs('plug/views/rooms/users/FriendsListView'),
+  'plug/views/rooms/users/IgnoresListView': function (m) {
+    return isView(m) && m.prototype.className === 'list ignored';
+  },
+  'plug/views/rooms/users/IgnoreRowView': new SimpleFetcher(function () {
+    var IgnoresListView = this.require('plug/views/rooms/users/IgnoresListView');
+    return IgnoresListView.prototype.RowClass;
+  }).needs('plug/views/rooms/users/IgnoresListView'),
+  'plug/views/rooms/users/MutesListView': function (m) {
+    return isView(m) && m.prototype.className === 'list mutes';
+  },
+  'plug/views/rooms/users/MuteRowView': new SimpleFetcher(function () {
+    var MutesListView = this.require('plug/views/rooms/users/MutesListView');
+    return MutesListView.prototype.RowClass;
+  }).needs('plug/views/rooms/users/MutesListView'),
+  'plug/views/rooms/users/RoomUsersListView': function (m) {
+    return isView(m) && m.prototype.className === 'list room';
+  },
+  'plug/views/rooms/users/RoomUserRowView': new SimpleFetcher(function () {
+    var RoomUsersListView = this.require('plug/views/rooms/users/RoomUsersListView');
+    return RoomUsersListView.prototype.RowClass;
+  }).needs('plug/views/rooms/users/RoomUsersListView'),
+  'plug/views/rooms/users/StaffListView': function (m) {
+    return isView(m) && m.prototype.className === 'list staff';
+  },
+  'plug/views/rooms/users/StaffGroupView': function (m) {
+    return isView(m) && m.prototype.className === 'group';
+  },
+  'plug/views/rooms/users/StaffRowView': function (m) {
+    return isView(m) && m.prototype.className === 'user' &&
+      !('onConfirm' in m.prototype); // not WaitListRowView, BanRowView, MuteRowView & IgnoreRowView
+  },
+  'plug/views/rooms/users/UserListView': new SimpleMatcher(function (m) {
+    return isView(m) && m.prototype.className === 'list' &&
+      m.prototype.collection === this.require('plug/collections/usersFiltered');
+  }).needs('plug/collections/usersFiltered'),
+  'plug/views/rooms/users/userListsPanelView': function (m) {
+    return m instanceof Backbone.View && m.id === 'user-lists';
+  },
+  'plug/views/rooms/users/WaitListView': function (m) {
+    return isView(m) && m.prototype.id === 'waitlist';
+  },
+  'plug/views/rooms/users/WaitListRowView': function (m) {
+    return isView(m) && m.prototype.className === 'user' &&
+      _.isFunction(m.prototype.onRemoveClick);
   },
   'plug/views/rooms/chat/ChatView': function (m) {
     return isView(m) && m.prototype.id === 'chat';
