@@ -130,6 +130,16 @@ Context.prototype.define = function (newPath, oldPath) {
 Context.prototype.setNotFound = function (path) {
   this._notFound.push(path);
 };
+Context.prototype.getUnknownModules = function () {
+  var knownModules = _.values(this._nameMapping);
+  var allModules = _.keys(require.s.contexts._.defined).filter(function (moduleName) {
+    return moduleName.substr(0, 5) !== 'plug/' &&
+      moduleName.substr(0, 4) !== 'hbs!' &&
+      this.require(moduleName) !== undefined;
+  }, this);
+
+  return _.difference(allModules, knownModules);
+};
 Context.prototype.isInSameNamespace = function (name, otherModuleName) {
   var otherName = this.resolveName(otherModuleName);
   return otherName && otherName.substr(0, otherName.lastIndexOf('/')) === name.substr(0, name.lastIndexOf('/'));
@@ -565,7 +575,7 @@ var plugModules = {
   'plug/handlers/ImportYouTubeHandler': new HandlerFetcher('ImportYouTubeEvent:import'),
   'plug/handlers/PreviewHandler': new HandlerFetcher('PreviewEvent:preview'),
   'plug/handlers/FacebookLoginHandler': new HandlerFetcher('FacebookLoginEvent:login'),
-  'plug/handlers/ListIgnoresHandler': new HandlerFetcher('UserListEvent:ignores'),
+  'plug/handlers/ListIgnoresHandler': new HandlerFetcher('UserListEvent:ignored'),
   'plug/handlers/PlaylistRenameHandler': new HandlerFetcher('PlaylistRenameEvent:rename'),
   'plug/handlers/UserBadgesHandler': new HandlerFetcher('StoreEvent:userBadges'),
   'plug/handlers/RoomCreateHandler': new HandlerFetcher('RoomCreateEvent:create'),
