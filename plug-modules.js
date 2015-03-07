@@ -1,87 +1,44 @@
 window.plugModules = (function () {
 
-/**
- * Tests if a module is a collection of a certain type of Model.
- *
- * @param {Object} m Module.
- * @param {function()} Model The Model.
- * @return {boolean} True if the module is a collection of the given models, false otherwise.
- */
+// Tests if an object is a Backbone collection of a certain type of Model.
 var isCollectionOf = function (m, Model) {
   return Model && m instanceof Backbone.Collection && m.model === Model;
 };
 
-/**
- * Checks if the given module is a Dialog class.
- *
- * @param {Object} m Module.
- * @return True if the module is a Dialog class, false otherwise.
- */
+// Checks if the given module is a plug.dj Dialog view class.
 var isDialog = function (m) {
   return m.prototype && m.prototype.className && m.prototype.className.indexOf('dialog') !== -1;
 };
 
-/**
- * Checks if two functions are sort of the same by comparing their source.
- *
- * @param {function()} a Function.
- * @param {function()} b Function.
- * @return True if the functions look somewhat alike, false otherwise.
- */
+// Checks if two functions are "kind of similar" by comparing their source.
 var functionsSeemEqual = function (a, b) {
+  // ignore whitespace
   return (a + '').replace(/\s/g, '') === (b + '').replace(/\s/g, '');
 };
 
-/**
- * Checks if a function's source contains a given string.
- *
- * @param {function()} fn Function.
- * @param {string} match String to look for.
- * @return True if fn contains the string, false otherwise.
- */
+// Checks if a function's source contains a given string.
 var functionContains = function (fn, match) {
   return _.isFunction(fn) && fn.toString().indexOf(match) !== -1;
 };
 
-/**
- * Checks if a given module is a View class.
- *
- * @param {Object} m Module.
- * @return True if the module is a View class, false otherwise.
- */
+// Checks if a given object looks like a Backbone View class.
 var isView = function (m) {
   return m.prototype && _.isFunction(m.prototype.render) && _.isFunction(m.prototype.$);
 };
 
-/**
- * Checks if a given module has a defaults property (plug.dj models).
- *
- * @param {Object} m Module.
- * @return True if the module has defaults, false otherwise.
- */
+// Checks if a given Backbone Model class has a defaults property (plug.dj models).
 var hasDefaults = function (m) {
   return m.prototype && m.prototype.defaults;
 };
 
-/**
- * Checks if a given module has the given attributes (Backbone models).
- *
- * @param {Object} m Module.
- * @return True if the module has the given attributes, false otherwise.
- */
+// Checks if an object has some set of attributes (Backbone models).
 var hasAttributes = function (m, attributes) {
   return m instanceof Backbone.Model && attributes.every(function (attr) {
     return attr in m.attributes;
   })
 };
 
-/**
- * Checks if a View template contains an element matching a given CSS selector.
- *
- * @param {function()} View View class.
- * @param {string} sel CSS Selector.
- * @return True if the View instance contains a matching element, false otherwise.
- */
+// Checks if a View template contains an element matching a given CSS selector.
 var viewHasElement = function (View, sel) {
   var stubEl = $('<div>');
   try {
@@ -96,11 +53,7 @@ var viewHasElement = function (View, sel) {
   }
 };
 
-/**
- * A stub matcher function, matching nothing, for modules that can not yet be matched uniquely.
- *
- * @return {bool} false.
- */
+// A stub matcher function, matching nothing, for modules that can not yet be matched uniquely.
 var todo = function () {
   return false;
 };
