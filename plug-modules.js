@@ -1164,7 +1164,8 @@ var plugModules = {
   // there's a bunch of different TabMenuViews, this one is only different from the rest in the methods it lacks
   'plug/views/users/settings/TabMenuView': function (m) {
     return isView(m) && m.prototype.className === 'tab-menu' &&
-      !('selectStore' in m.prototype) && !('select' in m.prototype) && !('selectRequests' in m.prototype);
+      !('selectStore' in m.prototype) && !('selectRequests' in m.prototype) &&
+      functionContains(m.prototype.onClick, 'application');
   },
   'plug/views/users/settings/SettingsApplicationView': function (m) {
     return isView(m) && m.prototype.className === 'application section';
