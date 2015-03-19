@@ -96,7 +96,7 @@ Context.prototype.getUnknownModules = function () {
 Context.prototype.isInSameNamespace = function (name, otherModuleName) {
   var otherName = this.resolveName(otherModuleName);
   return otherName && otherName.substr(0, otherName.lastIndexOf('/')) === name.substr(0, name.lastIndexOf('/'));
-}
+};
 // Add the new names to the global module registry
 Context.prototype.register = function () {
   for (var newName in this._nameMapping) if (this._nameMapping.hasOwnProperty(newName)) {
@@ -1331,6 +1331,11 @@ var plugModules = {
   'plug/views/rooms/settings/ChatLevelDropdownView': function (m) {
     return isView(m) && m.prototype.className === 'dropdown' &&
       functionContains(m.prototype.render, 'minChatLevel');
+  },
+
+  'plug/views/search/SearchView': function (m) {
+    return isView(m) && m.prototype.className === 'search' &&
+      'template' in m.prototype && m.prototype.template === undefined;
   }
 
 };
