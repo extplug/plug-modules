@@ -397,7 +397,6 @@ var plugModules = {
   'plug/actions/store/ProductsAction': new ActionMatcher('GET', 'store/products'),
   'plug/actions/store/InventoryAction': new ActionMatcher('GET', 'store/inventory'),
   'plug/actions/users/ValidateNameAction': new ActionMatcher('GET', 'users/validate/'),
-  'plug/actions/users/SetStatusAction': new ActionMatcher('PUT', 'users/status'),
   'plug/actions/users/SetLanguageAction': new ActionMatcher('PUT', 'users/language'),
   'plug/actions/users/SetAvatarAction': new ActionMatcher('PUT', 'users/avatar'),
   'plug/actions/users/SetBadgeAction': new ActionMatcher('PUT', 'users/badge'),
