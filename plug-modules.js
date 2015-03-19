@@ -1365,6 +1365,20 @@ for (var i = 0; i < detectives.length && i < 5000; i++) {
   }
 }
 
+// expose detective classes
+context.Detective = Detective;
+context.Matcher = Matcher;
+context.SimpleMatcher = SimpleMatcher;
+context.StepwiseMatcher = StepwiseMatcher;
+context.EventMatcher = EventMatcher;
+context.ActionMatcher = ActionMatcher;
+context.AndMatcher = AndMatcher;
+context.Fetcher = Fetcher;
+context.SimpleFetcher = SimpleFetcher;
+context.HandlerFetcher = HandlerFetcher;
+
+context.detectives = plugModules;
+
 return context;
 
 }())
