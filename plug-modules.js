@@ -867,14 +867,11 @@ var plugModules = {
   'plug/views/footer/SocialMenuView': function (m) {
     return isView(m) && m.prototype.className === 'social-menu' && m.prototype.template === undefined;
   },
-  'plug/views/footer/StatusMenuView': function (m) {
-    return isView(m) && m.prototype.className === 'status menu';
-  },
   'plug/views/footer/TwitterMenuView': function (m) {
     return isView(m) && m.prototype.id === 'twitter-menu';
   },
-  'plug/views/footer/UserMenuView': function (m) {
-    return isView(m) && m.prototype.className === 'user menu';
+  'plug/views/footer/UserInfoView': function (m) {
+    return isView(m) && m.prototype.className === 'info';
   },
   'plug/views/footer/UserMetaView': function (m) {
     return isView(m) && m.prototype.id === 'footer-user';
