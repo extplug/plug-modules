@@ -3,6 +3,8 @@
 Maps plug.dj defined modules to reasonable names, so you can more easily
 access internal plug.dj javascript.
 
+[![NPM](https://nodei.co/npm/plug-modules.png?downloads)](https://nodei.co/npm/plug-modules)
+
 ## Warning!
 
 `plug-modules` makes it easy to use plug.dj's client-side internals.

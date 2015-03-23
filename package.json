@@ -1,6 +1,6 @@
 {
   "name": "plug-modules",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Retroactively add reasonable module definition paths to plug.dj.",
   "main": "./plug-modules",
   "license": "MIT",
