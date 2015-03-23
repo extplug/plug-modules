@@ -619,9 +619,6 @@ var plugModules = {
   'plug/models/HistoryEntry': function (m) {
     return hasDefaults(m) && 'timestamp' in m.prototype.defaults && 'score' in m.prototype.defaults;
   },
-  'plug/models/ImportingPlaylist': function (m) {
-    return hasDefaults(m) && 'title' in m.prototype.defaults && 'tracks' in m.prototype.defaults;
-  },
   'plug/models/Media': function (m) {
     return hasDefaults(m) && 'cid' in m.prototype.defaults && 'format' in m.prototype.defaults;
   },
@@ -639,6 +636,9 @@ var plugModules = {
   },
   'plug/models/Room': function (m) {
     return hasDefaults(m) && 'slug' in m.prototype.defaults && 'capacity' in m.prototype.defaults;
+  },
+  'plug/models/SoundCloudPlaylist': function (m) {
+    return hasDefaults(m) && 'title' in m.prototype.defaults && 'tracks' in m.prototype.defaults;
   },
   'plug/models/StoreExtra': function (m) {
     return hasDefaults(m) && 'category' in m.prototype.defaults && 'name' in m.prototype.defaults &&
@@ -664,7 +664,8 @@ var plugModules = {
     return isCollectionOf(m, this.require('plug/models/BannedUser'));
   }).needs('plug/models/BannedUser'),
   'plug/collections/currentPlaylist': new SimpleMatcher(function (m) {
-    return isCollectionOf(m, this.require('plug/models/Media'));
+    return isCollectionOf(m, this.require('plug/models/Media')) &&
+      m._events && 'update:next' in m._events;
   }).needs('plug/models/Media'),
   'plug/collections/currentPlaylistFiltered': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/Media')) &&
@@ -694,6 +695,13 @@ var plugModules = {
       _.isFunction(m.onRemove) &&
       _.isFunction(m.onAdd) &&
       'MAX' in m.constructor;
+  }).needs('plug/models/User'),
+  'plug/collections/friendsFiltered': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/User')) &&
+      _.isFunction(m.setFilter) &&
+      m.comparator === 'uIndex' &&
+      // usersFiltered has a sourceCollection
+      !('sourceCollection' in m);
   }).needs('plug/models/User'),
   'plug/collections/history': new SimpleFetcher(function () {
     var RoomHistoryHandler = this.require('plug/handlers/RoomHistoryHandler');
@@ -725,7 +733,6 @@ var plugModules = {
       ignores.pop();
     }
   }).needs('plug/models/User', 'plug/actions/ignores/IgnoreAction'),
-  'plug/collections/imports': todo,
   'plug/collections/mutes': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/MutedUser'));
   }).needs('plug/models/MutedUser'),
@@ -742,10 +749,31 @@ var plugModules = {
     return isCollectionOf(m, this.require('plug/models/Playlist')) &&
       _.isFunction(m.jumpToMedia) && _.isArray(m.activeMedia);
   }).needs('plug/models/Playlist'),
-  'plug/collections/probablySoundCloudPlaylists': todo,
-  'plug/collections/purchasableAvatars': todo,
-  'plug/collections/searchResults2': todo,
-  'plug/collections/searchResults': todo,
+  'plug/collections/playlistSearchResults': new SimpleMatcher(function (m) {
+    // playlist search doesn't actually exist right now, but the models
+    // are there on the client side!
+    return isCollectionOf(m, this.require('plug/models/MediaSearchResult'));
+  }).needs('plug/models/MediaSearchResult'),
+  'plug/collections/purchasableAvatars': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/Avatar')) &&
+      !_.isFunction(m.__generate) && // allAvatars
+      !_.isFunction(m.onChange); // myAvatars
+  }).needs('plug/models/Avatar'),
+  'plug/collections/purchasableBadges': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/Badge')) &&
+      !_.isFunction(m.onChange); // myBadges
+  }).needs('plug/models/Badge'),
+  'plug/collections/relatedMedia': new SimpleMatcher(function (m) {
+    // TODO
+    return isCollectionOf(m, this.require('plug/models/Media')) && false;
+  }).needs('plug/models/Media'),
+  'plug/collections/restrictedMediaAlternatives': new SimpleMatcher(function (m) {
+    // TODO
+    return isCollectionOf(m, this.require('plug/models/Media')) && false;
+  }).needs('plug/models/Media'),
+  'plug/collections/soundCloudPlaylists': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/SoundCloudPlaylist'));
+  }).needs('plug/models/SoundCloudPlaylist'),
   // staff is only updated when a StaffListAction is triggered
   // eg. when the user navigates to the staff tab
   'plug/collections/staff': new SimpleMatcher(function (m) {
@@ -764,7 +792,6 @@ var plugModules = {
   'plug/collections/transactions': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/Transaction'));
   }).needs('plug/models/Transaction'),
-  'plug/collections/__unknown0__': todo,
   'plug/collections/userHistory': new SimpleFetcher(function () {
     var UserHistoryHandler = this.require('plug/handlers/UserHistoryHandler');
     return UserHistoryHandler.prototype.collection;
@@ -783,6 +810,27 @@ var plugModules = {
   'plug/collections/waitlist': function (m) {
     return m instanceof Backbone.Collection && 'isTheUserPlaying' in m;
   },
+  'plug/collections/youTubePlaylists': new SimpleMatcher(function (m) {
+    return isCollectionOf(m, this.require('plug/models/YouTubePlaylist'));
+  }).needs('plug/models/YouTubePlaylist'),
+  'plug/collections/youTubePlaylist': new StepwiseMatcher({
+    setup: function () {
+      // the ImportYouTubeHandler updates the current youtube playlist items
+      this.require('plug/handlers/ImportYouTubeHandler').prototype.onMediaLoaded.call(
+        // fake context
+        { finish: function () {} },
+        // recognisable test data
+        [ { id: -2000, author: 'plug-modules', title: 'Test item used to find the right collection.' } ]
+      );
+    },
+    check: function (m) {
+      return isCollectionOf(m, this.require('plug/models/Media')) &&
+        m.length === 1 && m.last().get('id') === -2000;
+    },
+    cleanup: function (youtubePlaylist) {
+      youtubePlaylist.reset();
+    }
+  }).needs('plug/models/Media', 'plug/handlers/ImportYouTubeHandler'),
 
   // facades
   'plug/facades/chatFacade': function (m) {
