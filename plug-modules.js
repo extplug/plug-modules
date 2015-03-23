@@ -1194,7 +1194,7 @@ var plugModules = {
     return m instanceof Backbone.View && m.id === 'audience';
   },
   'plug/views/rooms/roomLoaderView': function (m) {
-    return m instanceof Backbone.View && m.id === 'room-loader';
+    return m instanceof Backbone.View && m.className === 'loading-box';
   },
   'plug/views/rooms/boothView': function (m) {
     return m instanceof Backbone.View && m.id === 'dj-booth';
