@@ -502,6 +502,9 @@ var plugModules = {
     return !_.isFunction(m) && _.isFunction(m.execute) &&
       functionContains(m.execute, 'application/json');
   },
+  'plug/server/socketReceiver': function (m) {
+    return _.isFunction(m.ack) && _.isFunction(m.plugUpdate);
+  },
 
   'plug/events/Event': new EventMatcher('Event'),
   'plug/events/AlertEvent': new EventMatcher('AlertEvent'),
