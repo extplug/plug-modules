@@ -1,5 +1,7 @@
 # plug-modules
 
+[![Join the chat at https://gitter.im/PlugLynn/plug-modules](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/PlugLynn/plug-modules?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Maps plug.dj defined modules to reasonable names, so you can more easily
 access internal plug.dj javascript.
 
