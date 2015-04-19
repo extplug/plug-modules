@@ -1,4 +1,16 @@
-window.plugModules = (function () {
+;(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(factory);
+  }
+  else if (typeof module === 'object' && module.exports) {
+    module.exports = factory()
+  }
+  else {
+    // Browser globals
+    root.plugModules = factory();
+  }
+}(this, function () {
 
 // Tests if an object is a Backbone collection of a certain type of Model.
 var isCollectionOf = function (m, Model) {
@@ -1428,4 +1440,4 @@ context.detectives = plugModules;
 
 return context;
 
-}())
+}));
