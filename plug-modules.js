@@ -1070,10 +1070,28 @@ var plugModules = {
     // TODO ensure that there are no other modules that match this footprint
     return isView(m) && m.prototype.id === 'media-panel';
   },
-  'plug/views/playlists/media/panels/HistoryPanelView': new SimpleMatcher(function (m) {
+  'plug/views/playlists/media/panels/RoomHistoryPanelView': new SimpleMatcher(function (m) {
     return isView(m) && m.prototype.listClass === 'history' &&
       m.prototype.collection === this.require('plug/collections/history');
   }).needs('plug/collections/history'),
+  'plug/views/playlists/media/panels/RoomHistoryRowView': new SimpleFetcher(function () {
+    var RoomHistoryPanelView = this.require('plug/views/playlists/media/panels/RoomHistoryPanelView');
+    return RoomHistoryPanelView.prototype.RowClass;
+  }).needs('plug/views/playlists/media/panels/RoomHistoryPanelView'),
+  'plug/views/playlists/media/panels/UserHistoryPanelView': new SimpleMatcher(function (m) {
+    return isView(m) && m.prototype.collection === this.require('plug/collections/userHistory');
+  }).needs('plug/collections/userHistory'),
+  'plug/views/playlists/media/panels/UserHistoryRowView': new SimpleFetcher(function () {
+    var UserHistoryPanelView = this.require('plug/views/playlists/media/panels/UserHistoryPanelView');
+    return UserHistoryPanelView.prototype.RowClass;
+  }).needs('plug/views/playlists/media/panels/UserHistoryPanelView'),
+  'plug/views/playlists/media/panels/PlaylistPanelView': new SimpleMatcher(function (m) {
+     return isView(m) && m.prototype.collection === this.require('plug/collections/currentPlaylistFiltered');
+   }).needs('plug/collections/currentPlaylistFiltered'),
+  'plug/views/playlists/media/panels/PlaylistRowView': new SimpleFetcher(function () {
+    var PlaylistPanel = this.require('plug/views/playlists/media/panels/PlaylistPanelView');
+    return PlaylistPanel.prototype.RowClass;
+  }).needs('plug/views/playlists/media/panels/PlaylistPanelView'),
   'plug/views/playlists/menu/PlaylistMenuView': function (m) {
     return m instanceof Backbone.View && m.id === 'playlist-menu';
   },
