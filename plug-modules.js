@@ -77,7 +77,36 @@ var todo = function () {
 function Context() {
   this._nameMapping = {};
   this._notFound = [];
+  this._detectives = [];
+  this._ran = false;
 }
+// adds a Detective to this context. these detectives will
+// be run by Context#run.
+Context.prototype.add = function (name, detective) {
+  this._detectives.push({ name: name, detective: detective });
+  return this;
+};
+// runs all known detectives.
+Context.prototype.run = function () {
+  if (this._ran) {
+    return this;
+  }
+  var detectives = this._detectives.slice();
+  // < 5000 to prevent an infinite loop if a detective's dependency was not found.
+  for (var i = 0; i < detectives.length && i < 5000; i++) {
+    var current = detectives[i];
+    if (current.detective.isReady(this)) {
+      current.detective.run(this, current.name);
+    }
+    else {
+      // revisit later.
+      detectives.push(current);
+    }
+  }
+
+  this._ran = true;
+  return this;
+};
 Context.prototype.resolveName = function (path) {
   return this._nameMapping[path] ? this.resolveName(this._nameMapping[path]) : path;
 };
@@ -1417,31 +1446,17 @@ var plugModules = {
 
 };
 
-// Build an array of Detectives with their module names, so we can walk through it in order and
-// move things around. This is useful because Detectives that aren't "ready" can be pushed to
-// the end to be revisited later.
-var detectives = [];
-_.each(plugModules, function (matcher, name) {
-  if (!(matcher instanceof Detective)) {
-    matcher = new SimpleMatcher(matcher);
+// build default context
+var context = new Context();
+Object.keys(plugModules).forEach(function (name) {
+  var detective = plugModules[name];
+  if (!(detective instanceof Detective)) {
+    detective = new SimpleMatcher(detective);
   }
-  detectives.push({ name: name, detective: matcher });
+  context.add(name, detective);
 });
 
-var notFound = [];
-var context = new Context();
-// < 5000 to prevent an infinite loop if a detective's dependency was not found.
-for (var i = 0; i < detectives.length && i < 5000; i++) {
-  var current = detectives[i];
-  if (current.detective.isReady(context)) {
-    current.detective.run(context, current.name);
-  }
-  else {
-    // revisit later.
-    detectives.push(current);
-  }
-}
-
+context.Context = Context;
 // expose detective classes
 context.Detective = Detective;
 context.Matcher = Matcher;
@@ -1454,7 +1469,7 @@ context.Fetcher = Fetcher;
 context.SimpleFetcher = SimpleFetcher;
 context.HandlerFetcher = HandlerFetcher;
 
-context.detectives = plugModules;
+context.modules = plugModules;
 
 return context;
 
