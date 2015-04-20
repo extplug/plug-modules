@@ -20,15 +20,10 @@ gracefully.
 $ npm install plug-modules
 ```
 
-This is useful for dependency management and updates, but `plug-modules`
-does *not* currently work in a Node/io.js environment, and does *not*
-export anything through browserify-able means, either. You might want a
-build step to actually literally include the
-[`plug-modules.js`](./plug-modules.js) file for now, until that mess is
-fixed.
+You can then use it as a CommonJS module, or an AMD module, or just as `window.plugModules` when loaded in a `<script>` tag.
 
-After applying this script in the browser, you can access plug.dj
-odules like:
+Initialise the name mapping using `plugModules.run()`, and then you
+can access plug.dj modules like:
 
 ```javascript
 var SubClass = plugModules.require('plug/core/Class').extend({
@@ -47,11 +42,19 @@ var currentUser = plugModules.require('plug/models/currentUser');
 currentUser.set('gRole', 5);
 ```
 
+See the Wiki for more examples!
+
 `plugModules.require()` modules in your browser's developer console or
 use [replug](https://github.com/PlugLynn/replug) to figure out what the
 different modules are for, and what you can do with/to them.
 
 ## API
+
+### plugModules.run()
+
+Initialises plug-modules and computes the module name mappings. You
+need to run this before using `plugModules.require` or
+`plugModules.register`.
 
 ### plugModules.require(modulename)
 
@@ -61,7 +64,8 @@ as well as original (obfuscated) names.
 ### plugModules.register()
 
 Defines all the remapped names on the global `require()` object, so you
-can use `require()` to access modules via the remapped names, too.
+can use `require()` to access modules via the remapped names, too. In
+general, it's better to use `plugModules.require` instead.
 
 ### plugModules.isDefined(modulename)
 
@@ -77,7 +81,7 @@ plugModules.isDefined('module') === false
 ### plugModules.getUnknownModules()
 
 Returns an array of **original** module names that were *not* remapped.
-This is mostly useful for reverse-engineering more modules.
+This is mostly useful for finding more modules to reverse-engineer.
 
 ## How It Works
 
@@ -86,5 +90,5 @@ modules by duck-typing. They then associate those modules with a
 descriptive and readable name each. You can call
 `plugModules.register()` to inject all those names back into require.js,
 so you can use the global `require()` function on plug.dj.
-Alternatively, you can use `plugModules.require()` if you don't want to
+Or better, you can use `plugModules.require()` if you don't want to
 contaminate the global module-space.
