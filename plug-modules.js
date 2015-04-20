@@ -822,9 +822,7 @@ var plugModules = {
   // eg. when the user navigates to the staff tab
   'plug/collections/staff': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/User')) &&
-      // differ from the general users collection
-      !_.isFunction(m.getAudience) &&
-      m.comparator === this.require('plug/util/comparators').role;
+      m.comparator === this.require('plug/util/comparators').staff;
   }).needs('plug/models/User', 'plug/util/comparators'),
   'plug/collections/staffFiltered': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/User')) && _.isFunction(m.setFilter) &&
