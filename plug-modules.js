@@ -1220,10 +1220,10 @@ var plugModules = {
      functionContains(m.prototype.render, 'GET_USER_TRANSACTIONS') &&
      this.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView');
   }).needs('plug/views/users/inventory/InventoryView'),
-  'plug/views/users/inventory/TransactionRowView': function (m) {
+  'plug/views/users/inventory/TransactionRowView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'row' &&
-      functionContains(m.prototype.render, 'boost3x');
-  },
+      this.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView');
+  }).needs('plug/views/users/inventory/InventoryView'),
   'plug/views/users/profile/ExperienceView': function (m) {
     return isView(m) && m.prototype.className === 'experience section';
   },
