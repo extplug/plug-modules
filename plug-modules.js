@@ -1476,6 +1476,10 @@ var plugModules = {
   'plug/views/search/SearchView': function (m) {
     return isView(m) && m.prototype.className === 'search' &&
       'template' in m.prototype && m.prototype.template === undefined;
+  },
+
+  'plug/views/welcome/UsernameView': function (m) {
+    return isView(m) && m.prototype.className === 'section username empty';
   }
 
 };
