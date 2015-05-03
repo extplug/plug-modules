@@ -1284,16 +1284,52 @@ var plugModules = {
   'plug/views/users/store/StoreView': function (m) {
     return isView(m) && m.prototype.id === 'user-store';
   },
-  'plug/views/users/store/CategoryView': todo,
-  'plug/views/users/store/AvatarsView': todo,
-  'plug/views/users/store/AvatarsDropdownView': todo,
-  'plug/views/users/store/AvatarCellView': todo,
-  'plug/views/users/store/BundleCellView': todo,
-  'plug/views/users/store/BadgesView': todo,
-  'plug/views/users/store/BadgeCellView': todo,
-  'plug/views/users/store/MiscView': todo,
-  'plug/views/users/store/MiscCellView': todo,
-  'plug/views/users/store/TabMenuView': todo,
+  'plug/views/users/store/StoreCategoryView': new SimpleFetcher(function () {
+    // AvatarsView is a subclass of the CategoryView.
+    var AvatarsView = this.require('plug/views/users/store/AvatarsView');
+    return Object.getPrototypeOf(AvatarsView.prototype).constructor;
+  }).needs('plug/views/users/store/AvatarsView'),
+  'plug/views/users/store/AvatarsView': new SimpleMatcher(function (m) {
+    return isView(m) && m.prototype.className === 'avatars' &&
+      m.prototype.collection === this.require('plug/collections/purchasableAvatars');
+  }).needs('plug/collections/purchasableAvatars'),
+  'plug/views/users/store/AvatarCellView': new SimpleFetcher(function () {
+    var AvatarsView = this.require('plug/views/users/store/AvatarsView');
+    var cellInst = AvatarsView.prototype.getCell(null);
+    var AvatarCellView = cellInst.constructor;
+    cellInst.destroy();
+    return AvatarCellView;
+  }).needs('plug/views/users/store/AvatarsView'),
+  'plug/views/users/store/AvatarsDropdownView': new SimpleMatcher(function (m, name) {
+    return isView(m) && m.prototype.tagName === 'dl' &&
+      this.isInSameNamespace(name, 'plug/views/users/store/StoreView');
+  }).needs('plug/views/users/store/StoreView'),
+  'plug/views/users/store/BadgesView': new SimpleMatcher(function (m) {
+    return isView(m) && m.prototype.className === 'badges' &&
+      m.prototype.collection === this.require('plug/collections/purchasableBadges');
+  }).needs('plug/collections/purchasableBadges'),
+  'plug/views/users/store/BadgeCellView': new SimpleFetcher(function () {
+    var BadgesView = this.require('plug/views/users/store/BadgesView');
+    var cellInst = BadgesView.prototype.getCell(null);
+    var BadgeCellView = cellInst.constructor;
+    cellInst.destroy();
+    return BadgeCellView;
+  }).needs('plug/views/users/store/BadgesView'),
+  'plug/views/users/store/MiscView': new SimpleMatcher(function (m) {
+    return isView(m) && m.prototype.className === 'misc' &&
+      m.prototype.collection === this.require('plug/collections/storeExtras');
+  }).needs('plug/collections/storeExtras'),
+  'plug/views/users/store/MiscCellView': new SimpleFetcher(function () {
+    var MiscView = this.require('plug/views/users/store/MiscView');
+    var cellInst = MiscView.prototype.getCell(null);
+    var MiscCellView = cellInst.constructor;
+    cellInst.destroy();
+    return MiscCellView;
+  }).needs('plug/views/users/store/MiscView'),
+  'plug/views/users/store/TabMenuView': function (m) {
+    return isView(m) &&
+      m.prototype.template === this.require('hbs!templates/user/store/TabMenu');
+  },
 
   'plug/views/rooms/audienceView': function (m) {
     return m instanceof Backbone.View && m.id === 'audience';
