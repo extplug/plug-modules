@@ -8,5 +8,11 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/PlugLynn/plug-modules.git"
-  }
+  },
+  "files": [
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "plug-modules.js"
+  ]
 }
