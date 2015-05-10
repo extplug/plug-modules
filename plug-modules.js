@@ -455,7 +455,8 @@ var plugModules = {
     return _.isFunction(m) && _.isFunction(m.prototype.getURL) && _.isFunction(m.prototype.next);
   },
   'plug/actions/youtube/YouTubeSearchService': function (m) {
-    return _.isFunction(m) && functionContains(m.prototype.load, 'paid-content=false');
+    return _.isFunction(m) && _.isFunction(m.prototype.onList) &&
+      _.isFunction(m.prototype.onVideos);
   },
   'plug/actions/youtube/YouTubeSuggestService': function (m) {
     return _.isFunction(m) && functionContains(m.prototype.load, 'google.com/complete/search');
