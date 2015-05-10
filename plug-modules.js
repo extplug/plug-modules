@@ -1084,7 +1084,7 @@ var plugModules = {
   },
   'plug/views/playlists/help/PlaylistHelpView': function (m) {
     return isView(m) && m.prototype.className === 'media-list' &&
-      _.isFunction(m.prototype.onResize)
+      _.isFunction(m.prototype.onResize) &&
       viewHasElement(m, '.playlist-overlay-help');
   },
   'plug/views/playlists/import/PlaylistImportPanelView': function (m) {
