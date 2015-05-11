@@ -1098,6 +1098,43 @@ var plugModules = {
     // TODO ensure that there are no other modules that match this footprint
     return isView(m) && m.prototype.id === 'media-panel';
   },
+  'plug/views/playlists/media/panels/MediaActionsView': function (m) {
+    return isView(m) && m.prototype.className === 'actions';
+  },
+  'plug/views/playlists/media/panels/ImportPlaylistsPanelView': function (m) {
+    return isView(m) &&
+      !m.prototype.collection &&
+      m.prototype.className &&
+      m.prototype.className.indexOf('import-playlist-list') > -1;
+  },
+  'plug/views/playlists/media/panels/YouTubePlaylistsPanelView': new SimpleMatcher(function (m) {
+    var youTubePlaylists = this.require('plug/collections/youTubePlaylists');
+    return isView(m) && m.prototype.collection === youTubePlaylists &&
+      m.prototype.className &&
+      m.prototype.className.indexOf('import-playlist-list') !== -1;
+  }).needs('plug/collections/youTubePlaylists'),
+  'plug/views/playlists/media/panels/YouTubePlaylistsRowView': new SimpleFetcher(function () {
+    var Panel = this.require('plug/views/playlists/media/panels/YouTubePlaylistsPanelView');
+    return Panel.prototype.RowClass;
+  }).needs('plug/views/playlists/media/panels/YouTubePlaylistsPanelView'),
+  'plug/views/playlists/media/panels/YouTubePlaylistPanelView': new SimpleMatcher(function (m) {
+    return isView(m) &&
+      m.prototype.listClass === 'import-media' &&
+      m.prototype.collection === this.require('plug/collections/youTubePlaylist');
+  }).needs('plug/collections/youTubePlaylist'),
+  'plug/views/playlists/media/panels/YouTubePlaylistRowView': new SimpleFetcher(function () {
+    var Panel = this.require('plug/views/playlists/media/panels/YouTubePlaylistPanelView');
+    return Panel.prototype.RowClass;
+  }).needs('plug/views/playlists/media/panels/YouTubePlaylistPanelView'),
+  'plug/views/playlists/media/panels/PlaylistSearchPanelView': new SimpleMatcher(function (m) {
+    return isView(m) &&
+      m.prototype.listClass === 'search-playlists' &&
+      m.prototype.collection === this.require('plug/collections/playlistSearchResults');
+  }).needs('plug/collections/playlistSearchResults'),
+  'plug/views/playlists/media/panels/PlaylistSearchRowView': new SimpleFetcher(function () {
+    var Panel = this.require('plug/views/playlists/media/panels/PlaylistSearchPanelView');
+    return Panel.prototype.RowClass;
+  }).needs('plug/views/playlists/media/panels/PlaylistSearchPanelView'),
   'plug/views/playlists/media/panels/RoomHistoryPanelView': new SimpleMatcher(function (m) {
     return isView(m) && m.prototype.listClass === 'history' &&
       m.prototype.collection === this.require('plug/collections/history');
