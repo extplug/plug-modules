@@ -808,7 +808,7 @@ var plugModules = {
     return isCollectionOf(m, this.require('plug/models/Badge')) &&
       !_.isFunction(m.onChange); // myBadges
   }).needs('plug/models/Badge'),
-  'plug/collections/relatedMedia': new SimpleMatcher(function (m) {
+  'plug/collections/searchResults': new SimpleMatcher(function (m) {
     // TODO
     return isCollectionOf(m, this.require('plug/models/Media')) && false;
   }).needs('plug/models/Media'),
@@ -891,9 +891,12 @@ var plugModules = {
   'plug/facades/ImportMediaFacade': function (m) {
     return 'instance' in m && _.isFunction(m.instance.onCIDResult);
   },
-  'plug/facades/relatedMediaFacade': function (m) {
+  'plug/facades/searchFacade': function (m) {
     return _.isFunction(m.appendUnknown) && _.isFunction(m.resetRelated);
   },
+  'plug/facades/relatedMediaFacade': new SimpleFetcher(function (m) {
+    return this.require('plug/facades/searchFacade');
+  }).needs('plug/facades/searchFacade'),
   'plug/facades/remoteMediaFacade': function (m) {
     return _.isFunction(m.ytSearch) && _.isFunction(m.ytRelated) && _.isFunction(m.scPermalink);
   },
