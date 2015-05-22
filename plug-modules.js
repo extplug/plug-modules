@@ -1239,10 +1239,14 @@ var plugModules = {
     return isView(m) && m.prototype.className === 'avatars' &&
       m.prototype.eventName === this.require('plug/events/StoreEvent').GET_USER_AVATARS;
   }).needs('plug/events/StoreEvent'),
-  'plug/views/users/inventory/AvatarsDropdownView': function (m) {
+  'plug/views/users/inventory/AvatarsDropdownView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'dropdown' &&
-      functionContains(m.prototype.draw, '.userAvatars.base');
-  },
+      this.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView') &&
+      // the avatars and badges dropdowns are nearly identical, their only verifiable
+      // difference is in the select() method. the avatars dropdown has an odd special
+      // case for Rave avatars.
+      functionContains(m.prototype.select, 'rhc');
+  }).needs('plug/views/users/inventory/InventoryView'),
   'plug/views/users/inventory/AvatarCellView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'cell' &&
       _.isFunction(m.prototype.getBlinkFrame) &&
@@ -1256,6 +1260,12 @@ var plugModules = {
     return isView(m) && m.prototype.className === 'cell' &&
       functionContains(m.prototype.render, 'change:badge');
   },
+  'plug/views/users/inventory/BadgesDropdownView': new SimpleMatcher(function (m, name) {
+    return isView(m) && m.prototype.tagName === 'dl' &&
+      this.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView') &&
+      // inverse of the avatars dropdown check
+      !functionContains(m.prototype.select, 'rhc');
+  }).needs('plug/views/users/store/StoreView'),
   'plug/views/users/inventory/TransactionHistoryView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'history' &&
      functionContains(m.prototype.render, 'GET_USER_TRANSACTIONS') &&
@@ -1342,8 +1352,12 @@ var plugModules = {
     return AvatarCellView;
   }).needs('plug/views/users/store/AvatarsView'),
   'plug/views/users/store/AvatarsDropdownView': new SimpleMatcher(function (m, name) {
+    // exact duplicate of ../inventory/AvatarsDropdownView
+    // ...
     return isView(m) && m.prototype.tagName === 'dl' &&
-      this.isInSameNamespace(name, 'plug/views/users/store/StoreView');
+      this.isInSameNamespace(name, 'plug/views/users/store/StoreView') &&
+      // see ../inventory/AvatarsDropdownView
+      functionContains(m.prototype.select, 'rhc');
   }).needs('plug/views/users/store/StoreView'),
   'plug/views/users/store/BadgesView': new SimpleMatcher(function (m) {
     return isView(m) && m.prototype.className === 'badges' &&
@@ -1356,6 +1370,12 @@ var plugModules = {
     cellInst.destroy();
     return BadgeCellView;
   }).needs('plug/views/users/store/BadgesView'),
+  'plug/views/users/store/BadgesDropdownView': new SimpleMatcher(function (m, name) {
+    return isView(m) && m.prototype.tagName === 'dl' &&
+      this.isInSameNamespace(name, 'plug/views/users/store/StoreView') &&
+      // inverse of the avatars dropdown check
+      !functionContains(m.prototype.select, 'rhc');
+  }).needs('plug/views/users/store/StoreView'),
   'plug/views/users/store/MiscView': new SimpleMatcher(function (m) {
     return isView(m) && m.prototype.className === 'misc' &&
       m.prototype.collection === this.require('plug/collections/storeExtras');
