@@ -1265,7 +1265,7 @@ var plugModules = {
       this.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView') &&
       // inverse of the avatars dropdown check
       !functionContains(m.prototype.select, 'rhc');
-  }).needs('plug/views/users/store/StoreView'),
+  }).needs('plug/views/users/inventory/InventoryView'),
   'plug/views/users/inventory/TransactionHistoryView': new SimpleMatcher(function (m, name) {
     return isView(m) && m.prototype.className === 'history' &&
      functionContains(m.prototype.render, 'GET_USER_TRANSACTIONS') &&
