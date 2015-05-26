@@ -479,7 +479,7 @@ var plugModules = {
            // this is a bit lame, unfortunately plug.dj's "classes" don't publicly store their superclasses
            functionsSeemEqual(m.prototype.execute, function () { this.event = undefined, delete this.event });
   },
-  'plug/core/__unknown0__': function (m) {
+  'plug/core/AsyncHandler': function (m) {
     // subclass of EventHandler
     return _.isFunction(m) && m.prototype.hasOwnProperty('listenTo') && m.prototype.hasOwnProperty('finish');
   },
