@@ -486,6 +486,13 @@ var plugModules = {
   'plug/store/settings': function (m) {
     return _.isObject(m.settings);
   },
+  'plug/store/media': function (m) {
+    return _.isFunction(m.deleteOrphans);
+  },
+  'plug/store/compress': function (m) {
+    return _.isFunction(m.compress);
+  },
+
   'plug/lang/Lang': function (m) {
     return 'alerts' in m && 'addedToPlaylist' in m.alerts;
   },
