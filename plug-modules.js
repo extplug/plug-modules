@@ -384,7 +384,6 @@ var plugModules = {
   'plug/actions/media/MediaInsertAction': new ActionMatcher('POST', 'playlists/"+this.id+"/media/insert'),
   'plug/actions/media/MediaMoveAction': new ActionMatcher('PUT', 'playlists/"+this.id+"/media/move'),
   'plug/actions/media/MediaUpdateAction': new ActionMatcher('PUT', 'playlists/"+this.id+"/media/update'),
-  'plug/actions/media/SearchPlaylistsAction': new ActionMatcher('GET', 'playlists/media?q='),
   'plug/actions/mutes/MuteAction': new ActionMatcher('POST', 'mutes'),
   'plug/actions/mutes/UnmuteAction': new ActionMatcher('DELETE', 'mutes/'),
   'plug/actions/mutes/MutesListAction': new ActionMatcher('GET', 'mutes'),
