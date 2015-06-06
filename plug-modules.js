@@ -190,9 +190,12 @@ Matcher.prototype.resolve = function (context) {
   var defines = require.s.contexts._.defined;
   var fn = this.fn;
   for (var name in defines) if (defines.hasOwnProperty(name)) {
-    if (defines[name] && this.match(context, defines[name], name)) {
-      return name;
+    try {
+      if (defines[name] && this.match(context, defines[name], name)) {
+        return name;
+      }
     }
+    catch (e) {}
   }
 };
 Matcher.prototype.and = function (matcher) {
