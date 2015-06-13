@@ -910,7 +910,7 @@ var plugModules = {
     return _.isFunction(m.ytSearch) && _.isFunction(m.ytRelated) && _.isFunction(m.scPermalink);
   },
   'plug/facades/playlistsSearchFacade': function (m) {
-    return _.isFunction(m.setQuery) && _.isFunction(m.onTimeout);
+    return _.isFunction(m.setQuery) && _.isFunction(m.onHistory);
   },
 
   // application views
