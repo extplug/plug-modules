@@ -1,6 +1,6 @@
 {
   "name": "plug-modules",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Retroactively add reasonable module definition paths to plug.dj.",
   "main": "./plug-modules",
   "license": "MIT",
@@ -14,5 +14,11 @@
     "README.md",
     "LICENSE",
     "plug-modules.js"
-  ]
+  ],
+  "devDependencies": {
+    "jsdom": "3.x",
+    "plug-login": "*",
+    "plug-socket": "*",
+    "underscore": "*"
+  }
 }
