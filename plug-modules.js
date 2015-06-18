@@ -74,11 +74,18 @@ var todo = function () {
  * The Context keeps track of the long names, and provides some convenience methods
  * for working with renamed modules.
  */
-function Context() {
+function Context(target) {
   this._nameMapping = {};
   this._notFound = [];
   this._detectives = [];
   this._ran = false;
+  this.target = target
+  if (!target) try {
+    this.target = requirejs.s.contexts._.defined;
+  }
+  catch (e) {
+    this.target = null
+  }
 }
 // adds a Detective to this context. these detectives will
 // be run by Context#run.
@@ -111,7 +118,7 @@ Context.prototype.resolveName = function (path) {
   return this._nameMapping[path] ? this.resolveName(this._nameMapping[path]) : path;
 };
 Context.prototype.require = function (path) {
-  var defined = require.s.contexts._.defined;
+  var defined = this.target;
   return defined[path] || (this._nameMapping[path] && this.require(this._nameMapping[path])) || undefined;
 };
 Context.prototype.isDefined = function (path) {
@@ -126,7 +133,7 @@ Context.prototype.setNotFound = function (path) {
 };
 Context.prototype.getUnknownModules = function () {
   var knownModules = _.values(this._nameMapping);
-  var allModules = _.keys(require.s.contexts._.defined).filter(function (moduleName) {
+  var allModules = _.keys(this.target).filter(function (moduleName) {
     return moduleName.substr(0, 5) !== 'plug/' &&
       moduleName.substr(0, 4) !== 'hbs!' &&
       this.require(moduleName) !== undefined;
@@ -141,7 +148,7 @@ Context.prototype.isInSameNamespace = function (name, otherModuleName) {
 // Add the new names to the global module registry
 Context.prototype.register = function () {
   for (var newName in this._nameMapping) if (this._nameMapping.hasOwnProperty(newName)) {
-    require.s.contexts._.defined[newName] = this.require(newName);
+    this.target[newName] = this.require(newName);
   }
 };
 
@@ -187,7 +194,7 @@ Matcher.prototype.match = function (context, module, name) {
   throw new Error('Matcher "match" method not implemented');
 };
 Matcher.prototype.resolve = function (context) {
-  var defines = require.s.contexts._.defined;
+  var defines = context.target;
   var fn = this.fn;
   for (var name in defines) if (defines.hasOwnProperty(name)) {
     try {
@@ -217,7 +224,7 @@ Fetcher.prototype.resolve = function (context) {
   var module = this.fetch(context);
   if (module) {
     // find module name
-    var defines = require.s.contexts._.defined,
+    var defines = context.target,
       name;
     for (name in defines) if (defines.hasOwnProperty(name)) {
       if (defines[name] && defines[name] === module) {
