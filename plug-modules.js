@@ -368,6 +368,7 @@ var plugModules = {
   'plug/actions/auth/AuthTokenAction': new ActionMatcher('GET', 'auth/token'),
   'plug/actions/auth/FacebookAuthAction': new ActionMatcher('POST', 'auth/facebook'),
   'plug/actions/auth/KillSessionAction': new ActionMatcher('DELETE', 'auth/session'),
+  'plug/actions/auth/LoginAction': new ActionMatcher('POST', 'auth/login'),
   'plug/actions/bans/BanAction': new ActionMatcher('POST', 'bans/add'),
   'plug/actions/bans/ListBansAction': new ActionMatcher('GET', 'bans'),
   'plug/actions/bans/UnbanAction': new ActionMatcher('DELETE', 'bans/'),
@@ -457,6 +458,7 @@ var plugModules = {
   'plug/actions/users/BulkFindAction': new ActionMatcher('POST', 'users/bulk'),
   'plug/actions/users/SendGiftAction': new ActionMatcher('POST', 'gift'),
   'plug/actions/users/SaveSettingsAction': new ActionMatcher('PUT', 'users/settings'),
+  'plug/actions/users/SignupAction': new ActionMatcher('POST', 'users/signup'),
   'plug/actions/youtube/YouTubePlaylistService': function (m) {
     return _.isFunction(m) && _.isFunction(m.prototype.sortByName) && _.isFunction(m.prototype.next);
   },
@@ -1426,6 +1428,9 @@ var plugModules = {
   'plug/views/rooms/VotePanelView': function (m) {
     return isView(m) && m.prototype.id === 'vote';
   },
+  'plug/views/rooms/WalkthroughView': function () {
+    return isView(m) && m.prototype.id === 'walkthrough';
+  },
   'plug/views/rooms/header/HistoryPanelView': function (m) {
     return isView(m) && m.prototype.id === 'history-panel';
   },
@@ -1555,8 +1560,17 @@ var plugModules = {
       'template' in m.prototype && m.prototype.template === undefined;
   },
 
+  'plug/views/welcome/LoginView': function () {
+    return isView(m) && m.prototype.className.indexOf('login-mode') !== -1;
+  },
+  'plug/views/welcome/RegisterView': function () {
+    return isView(m) && m.prototype.className.indexOf('register-mode') !== -1;
+  },
+  'plug/views/welcome/SignupOverlayView': function () {
+    return isView(m) && m.prototype.className === 'sign-up-overlay';
+  },
   'plug/views/welcome/UsernameView': function (m) {
-    return isView(m) && m.prototype.className === 'section username empty';
+    return isView(m) && m.prototype.className === 'username';
   }
 
 };
