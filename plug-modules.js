@@ -305,17 +305,38 @@ EventMatcher.prototype.match = function (context, module, name) {
 /**
  * An ActionMatcher finds a module definition that defines a certain plug.dj Action.
  */
-function ActionMatcher(method, url) {
+function ActionMatcher(method, url, regex, params) {
   Matcher.call(this);
 
   this._method = method.toUpperCase();
   this._url = url;
+  this._regex = regex;
+  this._params = params || [];
+  this._fakeInstance = {};
+  Object.defineProperty(this._fakeInstance, '_super', {
+    get: function () {
+      // fake _super method
+      return function () {};
+    },
+    set: function () {
+      // ignore
+    }
+  });
 }
 ActionMatcher.prototype = Object.create(Matcher.prototype);
 ActionMatcher.prototype.match = function (context, module, name) {
-  return module.prototype &&
-    functionContains(module.prototype.execute, '.execute("' + this._method) &&
-    functionContains(module.prototype.execute, this._url);
+  if (module.prototype && module.prototype.type === this._method) {
+    if (this._url) {
+      return module.prototype.route === this._url;
+    }
+    else if (this._regex) {
+      module.prototype.init.apply(this._fakeInstance, this._params);
+      return typeof this._regex === 'string'
+        ? this._fakeInstance.route.indexOf(this._regex) === 0
+        : this._regex.test(this._fakeInstance.route);
+    }
+  }
+  return false;
 };
 
 /**
@@ -371,54 +392,55 @@ var plugModules = {
   'plug/actions/auth/LoginAction': new ActionMatcher('POST', 'auth/login'),
   'plug/actions/bans/BanAction': new ActionMatcher('POST', 'bans/add'),
   'plug/actions/bans/ListBansAction': new ActionMatcher('GET', 'bans'),
-  'plug/actions/bans/UnbanAction': new ActionMatcher('DELETE', 'bans/'),
+  'plug/actions/bans/UnbanAction': new ActionMatcher('DELETE', null, 'bans/'),
   'plug/actions/booth/JoinWaitlistAction': new ActionMatcher('POST', 'booth'),
   'plug/actions/booth/LeaveWaitlistAction': new ActionMatcher('DELETE', 'booth'),
   'plug/actions/booth/ModerateAddDJAction': new ActionMatcher('POST', 'booth/add'),
-  'plug/actions/booth/ModerateForceSkipAction': new ActionMatcher('POST', 'booth/skip"'),
-  'plug/actions/booth/ModerateRemoveDJAction': new ActionMatcher('DELETE', 'booth/remove/'),
+  'plug/actions/booth/ModerateForceSkipAction': new ActionMatcher('POST', 'booth/skip'),
+  'plug/actions/booth/ModerateRemoveDJAction': new ActionMatcher('DELETE', null, 'booth/remove/'),
   'plug/actions/booth/SkipTurnAction': new ActionMatcher('POST', 'booth/skip/me'),
   'plug/actions/booth/BoothLockAction': new ActionMatcher('PUT', 'booth/lock'),
   'plug/actions/booth/BoothMoveAction': new ActionMatcher('POST', 'booth/move'),
   'plug/actions/booth/BoothSetCycleAction': new ActionMatcher('PUT', 'booth/cycle'),
   'plug/actions/friends/BefriendAction': new ActionMatcher('POST', 'friends'),
-  'plug/actions/friends/ListFriendsAction': new ActionMatcher('GET', 'friends"'),
+  'plug/actions/friends/ListFriendsAction': new ActionMatcher('GET', 'friends'),
   'plug/actions/friends/ListInvitesAction': new ActionMatcher('GET', 'friends/invites'),
   'plug/actions/friends/IgnoreRequestAction': new ActionMatcher('PUT', 'friends/ignore'),
-  'plug/actions/friends/UnfriendAction': new ActionMatcher('DELETE', 'friends/'),
+  'plug/actions/friends/UnfriendAction': new ActionMatcher('DELETE', null, 'friends/'),
   'plug/actions/ignores/IgnoreAction': new ActionMatcher('POST', 'ignores'),
-  'plug/actions/ignores/UnignoreAction': new ActionMatcher('DELETE', 'ignores/'),
+  'plug/actions/ignores/UnignoreAction': new ActionMatcher('DELETE', null, 'ignores/'),
   'plug/actions/ignores/IgnoresListAction': new ActionMatcher('GET', 'ignores'),
-  'plug/actions/media/ListMediaAction': new ActionMatcher('GET', 'playlists/'),
-  'plug/actions/media/MediaDeleteAction': new ActionMatcher('POST', 'playlists/"+this.id+"/media/delete'),
+  'plug/actions/media/ListMediaAction': new ActionMatcher('GET', null, 'playlists/'),
+  'plug/actions/media/MediaDeleteAction': new ActionMatcher('POST', null, /\/media\/delete$/),
   'plug/actions/media/MediaGrabAction': new ActionMatcher('POST', 'grabs'),
-  'plug/actions/media/MediaInsertAction': new ActionMatcher('POST', 'playlists/"+this.id+"/media/insert'),
-  'plug/actions/media/MediaMoveAction': new ActionMatcher('PUT', 'playlists/"+this.id+"/media/move'),
-  'plug/actions/media/MediaUpdateAction': new ActionMatcher('PUT', 'playlists/"+this.id+"/media/update'),
+  'plug/actions/media/MediaInsertAction': new ActionMatcher('POST', null, /\/media\/insert$/, [ null, [], null ]),
+  'plug/actions/media/MediaMoveAction': new ActionMatcher('PUT', null, /\/media\/move$/, [ null, [], null ]),
+  'plug/actions/media/MediaUpdateAction': new ActionMatcher('PUT', null, /\/media\/update$/),
   'plug/actions/mutes/MuteAction': new ActionMatcher('POST', 'mutes'),
-  'plug/actions/mutes/UnmuteAction': new ActionMatcher('DELETE', 'mutes/'),
+  'plug/actions/mutes/UnmuteAction': new ActionMatcher('DELETE', null, 'mutes/'),
   'plug/actions/mutes/MutesListAction': new ActionMatcher('GET', 'mutes'),
   'plug/actions/news/NewsListAction': new ActionMatcher('GET', 'news'),
-  'plug/actions/notifications/NotificationReadAction': new ActionMatcher('DELETE', 'notifications/'),
+  'plug/actions/notifications/NotificationReadAction': new ActionMatcher('DELETE', null, 'notifications/'),
   'plug/actions/playlists/ListPlaylistsAction': new ActionMatcher('GET', 'playlists'),
-  'plug/actions/playlists/PlaylistActivateAction': new ActionMatcher('PUT', 'playlists/"+this.data+"/activate'),
-  'plug/actions/playlists/PlaylistCreateAction': new ActionMatcher('POST', 'playlists"'),
-  'plug/actions/playlists/PlaylistDeleteAction': new ActionMatcher('DELETE', 'playlists/'),
-  'plug/actions/playlists/PlaylistRenameAction': new ActionMatcher('PUT', 'playlists/"+this.id+"/rename'),
-  'plug/actions/playlists/PlaylistShuffleAction': new ActionMatcher('PUT', 'playlists/"+this.data+"/shuffle'),
+  'plug/actions/playlists/PlaylistActivateAction': new ActionMatcher('PUT', null, /\/activate$/),
+  'plug/actions/playlists/PlaylistCreateAction': new ActionMatcher('POST', 'playlists'),
+  'plug/actions/playlists/PlaylistDeleteAction': new ActionMatcher('DELETE', null, 'playlists/'),
+  'plug/actions/playlists/PlaylistRenameAction': new ActionMatcher('PUT', null, /\/rename$/),
+  'plug/actions/playlists/PlaylistShuffleAction': new ActionMatcher('PUT', null, /\/shuffle$/),
   'plug/actions/profile/SetBlurbAction': new ActionMatcher('PUT', 'profile/blurb'),
-  'plug/actions/rooms/ListFavoritesAction': new ActionMatcher('GET', 'rooms/favorites'),
+  'plug/actions/rooms/ListFavoritesAction': new ActionMatcher('GET', null, 'rooms/favorites'),
   'plug/actions/rooms/ListMyRoomsAction': new ActionMatcher('GET', 'rooms/me'),
-  'plug/actions/rooms/ListRoomsAction': new ActionMatcher('GET', 'rooms"'),
-  'plug/actions/rooms/ModerateDeleteChatAction': new ActionMatcher('DELETE', 'chat/"+this.data'),
+  'plug/actions/rooms/ListRoomsAction': new ActionMatcher('GET', null, 'rooms?q='),
+  'plug/actions/rooms/ModerateDeleteChatAction': new ActionMatcher('DELETE', null, 'chat/'),
   'plug/actions/rooms/RoomCreateAction': new ActionMatcher('POST', 'rooms'),
   'plug/actions/rooms/RoomFavoriteAction': new ActionMatcher('POST', 'rooms/favorites'),
   'plug/actions/rooms/RoomHistoryAction': new ActionMatcher('GET', 'rooms/history'),
   'plug/actions/rooms/RoomJoinAction': new ActionMatcher('POST', 'rooms/join'),
   'plug/actions/rooms/RoomStateAction': new ActionMatcher('GET', 'rooms/state'),
-  'plug/actions/rooms/RoomUnfavoriteAction': new ActionMatcher('DELETE', 'rooms/favorites'),
+  'plug/actions/rooms/RoomUnfavoriteAction': new ActionMatcher('DELETE', null, 'rooms/favorites'),
   'plug/actions/rooms/RoomUpdateAction': new ActionMatcher('POST', 'rooms/update'),
-  'plug/actions/rooms/RoomValidateAction': new ActionMatcher('GET', 'rooms/validate'),
+  'plug/actions/rooms/RoomValidateAction': new ActionMatcher('GET', null, 'rooms/validate'),
+  'plug/actions/rooms/SOSAction': new ActionMatcher('POST', 'rooms/sos'),
   'plug/actions/rooms/VoteAction': new ActionMatcher('POST', 'votes'),
   'plug/actions/soundcloud/SoundCloudSearchService': function (m) {
     return _.isFunction(m) && _.isFunction(m.prototype.onResolve) && _.isFunction(m.prototype.parse);
@@ -441,20 +463,20 @@ var plugModules = {
       _.isFunction(m.prototype.onComplete);
   },
   'plug/actions/staff/StaffListAction': new ActionMatcher('GET', 'staff'),
-  'plug/actions/staff/StaffRemoveAction': new ActionMatcher('DELETE', 'staff/'),
+  'plug/actions/staff/StaffRemoveAction': new ActionMatcher('DELETE', null, 'staff/'),
   'plug/actions/staff/StaffUpdateAction': new ActionMatcher('POST', 'staff/update'),
   'plug/actions/store/ChangeUsernameAction': new ActionMatcher('POST', 'store/purchase/username'),
   'plug/actions/store/PurchaseAction': new ActionMatcher('POST', 'store/purchase'),
-  'plug/actions/store/ProductsAction': new ActionMatcher('GET', 'store/products'),
-  'plug/actions/store/InventoryAction': new ActionMatcher('GET', 'store/inventory'),
-  'plug/actions/users/ValidateNameAction': new ActionMatcher('GET', 'users/validate/'),
+  'plug/actions/store/ProductsAction': new ActionMatcher('GET', null, 'store/products'),
+  'plug/actions/store/InventoryAction': new ActionMatcher('GET', null, 'store/inventory'),
+  'plug/actions/users/ValidateNameAction': new ActionMatcher('GET', null, 'users/validate/'),
   'plug/actions/users/SetLanguageAction': new ActionMatcher('PUT', 'users/language'),
   'plug/actions/users/SetAvatarAction': new ActionMatcher('PUT', 'users/avatar'),
   'plug/actions/users/SetBadgeAction': new ActionMatcher('PUT', 'users/badge'),
-  'plug/actions/users/MeAction': new ActionMatcher('GET', '"users/me"'),
+  'plug/actions/users/MeAction': new ActionMatcher('GET', 'users/me'),
   'plug/actions/users/ListTransactionsAction': new ActionMatcher('GET', 'users/me/transactions'),
   'plug/actions/users/UserHistoryAction': new ActionMatcher('GET', 'users/me/history'),
-  'plug/actions/users/UserFindAction': new ActionMatcher('GET', 'users/"+this.data'),
+  'plug/actions/users/UserFindAction': new ActionMatcher('GET', null, 'users/'),
   'plug/actions/users/BulkFindAction': new ActionMatcher('POST', 'users/bulk'),
   'plug/actions/users/SendGiftAction': new ActionMatcher('POST', 'gift'),
   'plug/actions/users/SaveSettingsAction': new ActionMatcher('PUT', 'users/settings'),
