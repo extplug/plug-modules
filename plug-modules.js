@@ -850,11 +850,31 @@ var plugModules = {
     return isCollectionOf(m, this.require('plug/models/Badge')) &&
       !_.isFunction(m.onChange); // myBadges
   }).needs('plug/models/Badge'),
-  'plug/collections/searchResults': new SimpleMatcher(function (m) {
-    // TODO
-    return isCollectionOf(m, this.require('plug/models/Media')) && false;
-  }).needs('plug/models/Media'),
-  'plug/collections/restrictedMediaAlternatives': new SimpleMatcher(function (m) {
+  'plug/collections/restrictedMediaAlternatives': new StepwiseMatcher({
+    setup: function () {
+      var RSHandler = this.require('plug/handlers/RestrictedSearchHandler');
+      // the restricted search result handler resets the searchResults
+      // array
+      RSHandler.prototype.onResult.call(
+        { finish: function () {} },
+        [ {
+          id: -1000,
+          author: 'plug-modules',
+          title: 'Test item used to find the right collection.'
+        } ]
+      );
+    },
+    check: function (m) {
+      return isCollectionOf(m, this.require('plug/models/Media')) &&
+        m.last().get('id') === -1000;
+    },
+    cleanup: function (searchResults) {
+      // we cannot get back the original search results, unfortunately,
+      // without re-running the search query (which may be possible, but
+      // is a little expensive)
+    }
+  }).needs('plug/handlers/RestrictedSearchHandler', 'plug/models/Media'),
+  'plug/collections/relatedMedia': new SimpleMatcher(function (m) {
     // TODO
     return isCollectionOf(m, this.require('plug/models/Media')) && false;
   }).needs('plug/models/Media'),
