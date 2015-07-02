@@ -126,6 +126,7 @@ Context.prototype.isDefined = function (path) {
 };
 Context.prototype.define = function (newPath, oldPath) {
   this._nameMapping[newPath] = oldPath;
+  this.require(oldPath).__plugModule = newPath
   return this;
 };
 Context.prototype.setNotFound = function (path) {
@@ -198,7 +199,8 @@ Matcher.prototype.resolve = function (context) {
   var fn = this.fn;
   for (var name in defines) if (defines.hasOwnProperty(name)) {
     try {
-      if (defines[name] && this.match(context, defines[name], name)) {
+      if (defines[name] && !defines[name].__plugModule &&
+          this.match(context, defines[name], name)) {
         return name;
       }
     }
