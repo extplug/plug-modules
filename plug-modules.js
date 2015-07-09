@@ -1176,7 +1176,7 @@ var plugModules = {
       _.isFunction(m.prototype.onBackClick);
   },
   'plug/views/playlists/media/headers/YouTubePlaylistsHeader': function (m) {
-    const Lang = this.require('lang/Lang');
+    var Lang = this.require('lang/Lang');
     return isView(m) && m.prototype.className === 'header import' &&
       m.prototype.template === this.require('hbs!templates/playlist/media/headers/ImportYouTubePlaylistsHeader')(Lang);
   },
@@ -1191,7 +1191,7 @@ var plugModules = {
       _.isFunction(m.prototype.onBackClick);
   },
   'plug/views/playlists/media/headers/SoundCloudSetsHeader': function (m) {
-    const Lang = this.require('lang/Lang');
+    var Lang = this.require('lang/Lang');
     return isView(m) && m.prototype.className === 'header import' &&
       _.isFunction(m.prototype.onImportClick) &&
       m.prototype.template === this.require('hbs!templates/playlist/media/headers/ImportSoundCloudSetsHeader')(Lang);
@@ -1208,7 +1208,7 @@ var plugModules = {
       _.isFunction(m.prototype.onBackClick);
   },
   'plug/views/playlists/media/headers/SoundCloudTracksHeader': function (m) {
-    const Lang = this.require('lang/Lang');
+    var Lang = this.require('lang/Lang');
     return isView(m) && m.prototype.className === 'header import' &&
       _.isFunction(m.prototype.onImportClick) &&
       m.prototype.template === this.require('hbs!templates/playlist/media/headers/ImportSoundCloudHeader')(Lang);
