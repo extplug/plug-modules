@@ -1152,7 +1152,7 @@ var plugModules = {
   },
   'plug/views/playlists/media/headers/MediaHeaderView': function (m) {
     return isView(m) && m.prototype.className === 'header' &&
-      m.__super__ === Backbone.View;
+      !('template' in m.prototype);
   },
   'plug/views/playlists/media/headers/ImportHeaderView': function (m) {
     return isView(m) && m.prototype.className === 'header import' &&
