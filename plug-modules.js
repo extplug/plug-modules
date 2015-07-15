@@ -65,11 +65,6 @@ var viewHasElement = function (View, sel) {
   }
 };
 
-// A stub matcher function, matching nothing, for modules that can not yet be matched uniquely.
-var todo = function () {
-  return false;
-};
-
 /**
  * The Context keeps track of the long names, and provides some convenience methods
  * for working with renamed modules.
