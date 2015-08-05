@@ -1521,7 +1521,7 @@ var plugModules = {
   'plug/views/rooms/VotePanelView': function (m) {
     return isView(m) && m.prototype.id === 'vote';
   },
-  'plug/views/rooms/WalkthroughView': function () {
+  'plug/views/rooms/WalkthroughView': function (m) {
     return isView(m) && m.prototype.id === 'walkthrough';
   },
   'plug/views/rooms/header/HistoryPanelView': function (m) {
@@ -1653,13 +1653,13 @@ var plugModules = {
       'template' in m.prototype && m.prototype.template === undefined;
   },
 
-  'plug/views/welcome/LoginView': function () {
+  'plug/views/welcome/LoginView': function (m) {
     return isView(m) && m.prototype.className.indexOf('login-mode') !== -1;
   },
-  'plug/views/welcome/RegisterView': function () {
+  'plug/views/welcome/RegisterView': function (m) {
     return isView(m) && m.prototype.className.indexOf('register-mode') !== -1;
   },
-  'plug/views/welcome/SignupOverlayView': function () {
+  'plug/views/welcome/SignupOverlayView': function (m) {
     return isView(m) && m.prototype.className === 'sign-up-overlay';
   },
   'plug/views/welcome/UsernameView': function (m) {
