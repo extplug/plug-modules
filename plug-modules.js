@@ -328,9 +328,11 @@ ActionMatcher.prototype.match = function (context, module, name) {
     }
     else if (this._regex) {
       module.prototype.init.apply(this._fakeInstance, this._params);
-      return typeof this._regex === 'string'
+      return this._fakeInstance.route && (
+        typeof this._regex === 'string'
         ? this._fakeInstance.route.indexOf(this._regex) === 0
-        : this._regex.test(this._fakeInstance.route);
+        : this._regex.test(this._fakeInstance.route)
+      );
     }
   }
   return false;
@@ -861,6 +863,7 @@ var plugModules = {
     },
     check: function (m) {
       return isCollectionOf(m, this.require('plug/models/Media')) &&
+        m.length > 0 &&
         m.last().get('id') === -1000;
     },
     cleanup: function (searchResults) {
