@@ -1521,8 +1521,13 @@ var plugModules = {
   'plug/views/rooms/VotePanelView': function (m) {
     return isView(m) && m.prototype.id === 'vote';
   },
-  'plug/views/rooms/WalkthroughView': function (m) {
-    return isView(m) && m.prototype.id === 'walkthrough';
+  'plug/views/rooms/walkthrough/GuestWalkthroughView': function (m) {
+    return isView(m) && m.prototype.id === 'walkthrough' &&
+      _.isFunction(m.prototype.fadeIn);
+  },
+  'plug/views/rooms/walkthrough/UserWalkthroughView': function (m) {
+    return isView(m) && m.prototype.id === 'walkthrough' &&
+      !('fadeIn' in m.prototype);
   },
   'plug/views/rooms/header/HistoryPanelView': function (m) {
     return isView(m) && m.prototype.id === 'history-panel';
