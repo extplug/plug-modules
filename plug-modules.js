@@ -121,7 +121,10 @@ Context.prototype.isDefined = function (path) {
 };
 Context.prototype.define = function (newPath, oldPath) {
   this._nameMapping[newPath] = oldPath;
-  this.require(oldPath).__plugModule = newPath
+  var mod = this.require(oldPath);
+  if (!mod.__plugModule) {
+    mod.__plugModule = newPath;
+  }
   return this;
 };
 Context.prototype.setNotFound = function (path) {
@@ -1123,9 +1126,9 @@ var plugModules = {
   'plug/views/dialogs/RoomCreateDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-room-create';
   },
-  'plug/views/dialogs/StaffRoleDialog': function (m) {
-    return isDialog(m) && m.prototype.id === 'dialog-user-role';
-  },
+  'plug/views/dialogs/StaffRoleDialog': new SimpleFetcher(function () {
+    return this.require('plug/views/dialogs/UserRoleDialog');
+  }).needs('plug/views/dialogs/UserRoleDialog'),
   'plug/views/dialogs/TutorialDialog': function (m) {
     return isDialog(m) && m.prototype.id === 'dialog-preview' &&
       m.prototype.className.indexOf('tutorial') !== -1;
