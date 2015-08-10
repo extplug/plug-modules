@@ -801,32 +801,10 @@ var plugModules = {
     var RoomHistoryHandler = this.require('plug/handlers/RoomHistoryHandler');
     return RoomHistoryHandler.prototype.collection;
   }).needs('plug/handlers/RoomHistoryHandler'),
-  'plug/collections/ignores': new StepwiseMatcher({
-    // The IgnoreAction puts the received data in the `ignores` collection in the
-    // `parse` method. So here we pretend to have a new ignore, add it to the collection,
-    // and then find which collection was changed.
-    setup: function () {
-      var IgnoreAction = this.require('plug/actions/ignores/IgnoreAction');
-      var User = this.require('plug/models/User')
-      IgnoreAction.prototype.parse.call(
-        // fake context with an empty trigger function to
-        // 1) prevent an error, and
-        // 2) not show the notification box that this would otherwise show.
-        { trigger: function () {} },
-        // fake "response"
-        { code: 200, data: [ { id: -1000, username: '__test__' } ] }
-      );
-    },
-    check: function (m) {
+  'plug/collections/ignores': new SimpleMatcher(function (m) {
       return isCollectionOf(m, this.require('plug/models/User')) &&
-        m.comparator === 'username' &&
-        m.length > 0 && m.last().get('id') === -1000;
-    },
-    cleanup: function (ignores) {
-      // get rid of the fake user
-      ignores.pop();
-    }
-  }).needs('plug/models/User', 'plug/actions/ignores/IgnoreAction'),
+        m.comparator === 'username';
+  }).needs('plug/models/User'),
   'plug/collections/mutes': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/MutedUser'));
   }).needs('plug/models/MutedUser'),
