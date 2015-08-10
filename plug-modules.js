@@ -50,21 +50,6 @@ var hasAttributes = function (m, attributes) {
   })
 };
 
-// Checks if a View template contains an element matching a given CSS selector.
-var viewHasElement = function (View, sel) {
-  var stubEl = $('<div>');
-  try {
-    var x = new View({ el: stubEl });
-    x.render();
-    var has = x.$(sel).length > 0;
-    x.remove();
-    return has;
-  }
-  catch (e) {
-    return false;
-  }
-};
-
 /**
  * The Context keeps track of the long names, and provides some convenience methods
  * for working with renamed modules.
@@ -1023,7 +1008,10 @@ var plugModules = {
   },
   'plug/views/dashboard/header/DashboardHeaderView': function (m) {
     return isView(m) && m.prototype.className === 'app-header' &&
-      viewHasElement(m, '.event-calendar');
+      // the RoomHeader looks a lot like this, but does not have its own
+      // remove() method
+      m.prototype.hasOwnProperty('remove') &&
+      !m.prototype.hasOwnProperty('initialize');
   },
   'plug/views/dashboard/news/NewsView': function (m) {
     return isView(m) && m.prototype.id === 'news';
@@ -1173,7 +1161,7 @@ var plugModules = {
   'plug/views/playlists/help/PlaylistHelpView': function (m) {
     return isView(m) && m.prototype.className === 'media-list' &&
       _.isFunction(m.prototype.onResize) &&
-      viewHasElement(m, '.playlist-overlay-help');
+      !('clear' in m.prototype);
   },
   'plug/views/playlists/import/PlaylistImportPanelView': function (m) {
     return isView(m) && m.prototype.id === 'playlist-import-panel';
