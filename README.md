@@ -20,7 +20,8 @@ gracefully.
 $ npm install plug-modules
 ```
 
-You can then use it as a CommonJS module, or an AMD module, or just as `window.plugModules` when loaded in a `<script>` tag.
+You can then use it as a CommonJS module, or an AMD module, or just as
+`window.plugModules` when loaded in a `<script>` tag.
 
 Initialise the name mapping using `plugModules.run()`, and then you
 can access plug.dj modules like:
@@ -62,10 +63,9 @@ require([ 'plug-modules!plug/core/Events' ], function (Events) {
 
 ### plugModules.run()
 
-Initialises plug-modules and computes the module name mappings. You
-need to run this before using `plugModules.require` or
-`plugModules.register`. It's done for you if you're using the require.js
-plugin.
+Initialises plug-modules and computes all the module name mappings. You
+need to run this before using `plugModules.register`. It's done for you
+if you're using the require.js plugin.
 
 ### plugModules.require(modulename)
 
@@ -93,6 +93,8 @@ plugModules.isDefined('module') === false
 
 Returns an array of **original** module names that were *not* remapped.
 This is mostly useful for finding more modules to reverse-engineer.
+Note that this is only useful if you've run _all_ detectives, otherwise
+modules that haven't yet been used won't be remapped.
 
 ## How It Works
 
