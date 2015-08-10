@@ -50,11 +50,22 @@ different modules are for, and what you can do with/to them.
 
 ## API
 
+### require.js plugin
+
+`plug-modules` can be used as a require.js plugin:
+
+```javascript
+require([ 'plug-modules!plug/core/Events' ], function (Events) {
+  Events.trigger('notify', 'icon-plug-dj', 'Hello from plug-modules!');
+});
+```
+
 ### plugModules.run()
 
 Initialises plug-modules and computes the module name mappings. You
 need to run this before using `plugModules.require` or
-`plugModules.register`.
+`plugModules.register`. It's done for you if you're using the require.js
+plugin.
 
 ### plugModules.require(modulename)
 

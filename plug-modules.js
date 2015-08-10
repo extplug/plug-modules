@@ -85,7 +85,10 @@ function Context(target) {
 // adds a Detective to this context. these detectives will
 // be run by Context#run.
 Context.prototype.add = function (name, detective) {
-  this._detectives.push({ name: name, detective: detective });
+  this._detectives[name] = {
+    detective: detective,
+    ran: false
+  };
   return this;
 };
 // runs all known detectives.
@@ -93,28 +96,44 @@ Context.prototype.run = function () {
   if (this._ran) {
     return this;
   }
-  var detectives = this._detectives.slice();
-  // < 5000 to prevent an infinite loop if a detective's dependency was not found.
-  for (var i = 0; i < detectives.length && i < 5000; i++) {
-    var current = detectives[i];
-    if (current.detective.isReady(this)) {
-      current.detective.run(this, current.name);
-    }
-    else {
-      // revisit later.
-      detectives.push(current);
-    }
-  }
+
+  Object.keys(this._detectives).forEach(function (name) {
+    this.require(name);
+  }, this);
 
   this._ran = true;
   return this;
+};
+Context.prototype.findModule = function (name) {
+  var detective = this._detectives[name];
+  if (detective && !detective.ran) {
+    if (!detective.detective.isReady(this)) {
+      detective.detective.getDependencies().forEach(function (dep) {
+        this.require(dep);
+      }, this);
+    }
+    detective.detective.run(this, name);
+    detective.ran = true;
+    if (this.isDefined(name)) {
+      return this.require(name);
+    }
+  }
 };
 Context.prototype.resolveName = function (path) {
   return this._nameMapping[path] ? this.resolveName(this._nameMapping[path]) : path;
 };
 Context.prototype.require = function (path) {
-  var defined = this.target;
-  return defined[path] || (this._nameMapping[path] && this.require(this._nameMapping[path])) || undefined;
+  if (this.target[path]) {
+    return this.target[path];
+  }
+  // known module
+  if (this._nameMapping[path]) {
+    var mod = this.require(this._nameMapping[path])
+    if (mod) {
+      return mod;
+    }
+  }
+  return this.findModule(path);
 };
 Context.prototype.isDefined = function (path) {
   return typeof this.require(path) !== 'undefined';
@@ -167,6 +186,9 @@ Detective.prototype.isReady = function (context) {
   return this._needs.every(function (name) {
     return context.isDefined(name);
   });
+};
+Detective.prototype.getDependencies = function () {
+  return this._needs;
 };
 Detective.prototype.resolve = function () {
   throw new Error('Engineer "resolve" method not implemented');
@@ -1703,6 +1725,16 @@ context.SimpleFetcher = SimpleFetcher;
 context.HandlerFetcher = HandlerFetcher;
 
 context.modules = plugModules;
+
+context.load = function (name, req, cb, config) {
+  var result = context.require(name);
+  if (result) {
+    cb(result);
+  }
+  else {
+    cb.error(new Error('module "' + name + '" not found'));
+  }
+};
 
 return context;
 
