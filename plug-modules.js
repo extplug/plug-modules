@@ -860,10 +860,24 @@ var plugModules = {
       // is a little expensive)
     }
   }).needs('plug/handlers/RestrictedSearchHandler', 'plug/models/Media'),
-  'plug/collections/relatedMedia': new SimpleMatcher(function (m) {
-    // TODO
-    return isCollectionOf(m, this.require('plug/models/Media')) && false;
-  }).needs('plug/models/Media'),
+  'plug/collections/relatedMedia': new SimpleFetcher(function (m) {
+    // this collection gets reset by the relatedMediaFacade, so we can
+    // overwrite the reset method on _all_ collections temporarily and
+    // trigger a reset. The reset won't actually do anything else but
+    // tell us which collection it was called on.
+    var facade = this.require('plug/facades/relatedMediaFacade');
+    var reset = Backbone.Collection.prototype.reset;
+    var relatedMedia;
+    Backbone.Collection.prototype.reset = function () {
+      relatedMedia = this;
+    };
+    // fake a facade object for facade.reset's `this`, so we don't
+    // reset anything that might be useful to the user
+    facade.reset.call({ data: [] });
+    // revert
+    Backbone.Collection.prototype.reset = reset;
+    return relatedMedia;
+  }).needs('plug/facades/relatedMediaFacade'),
   'plug/collections/soundCloudPlaylists': new SimpleMatcher(function (m) {
     return isCollectionOf(m, this.require('plug/models/SoundCloudPlaylist'));
   }).needs('plug/models/SoundCloudPlaylist'),
