@@ -35,7 +35,7 @@ var functionContains = function (fn, match) {
 
 // Checks if a given object looks like a Backbone View class.
 var isView = function (m) {
-  return m.prototype && _.isFunction(m.prototype.render) && _.isFunction(m.prototype.$);
+  return m.prototype && 'render' in m.prototype && '$' in m.prototype;
 };
 
 // Checks if a given Backbone Model class has a defaults property (plug.dj models).
