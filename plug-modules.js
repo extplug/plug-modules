@@ -491,14 +491,18 @@ var plugModules = {
   'plug/actions/users/SaveSettingsAction': new ActionMatcher('PUT', 'users/settings'),
   'plug/actions/users/SignupAction': new ActionMatcher('POST', 'users/signup'),
   'plug/actions/youtube/YouTubePlaylistService': function (m) {
-    return _.isFunction(m) && _.isFunction(m.prototype.sortByName) && _.isFunction(m.prototype.next);
+    return _.isFunction(m) && _.isFunction(m.prototype.onChannel) &&
+      _.isFunction(m.prototype.loadLists);
   },
   'plug/actions/youtube/YouTubeImportService': function (m) {
-    return _.isFunction(m) && _.isFunction(m.prototype.getURL) && _.isFunction(m.prototype.next);
+    return _.isFunction(m) && _.isFunction(m.prototype.onList) &&
+      _.isFunction(m.prototype.onVideos) &&
+      _.isFunction(m.prototype.loadNext);
   },
   'plug/actions/youtube/YouTubeSearchService': function (m) {
     return _.isFunction(m) && _.isFunction(m.prototype.onList) &&
-      _.isFunction(m.prototype.onVideos);
+      _.isFunction(m.prototype.onVideos) &&
+      _.isFunction(m.prototype.loadRelated);
   },
   'plug/actions/youtube/YouTubeSuggestService': function (m) {
     return _.isFunction(m) && functionContains(m.prototype.load, 'google.com/complete/search');
