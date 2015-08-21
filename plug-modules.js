@@ -14,12 +14,16 @@
 
 // Tests if an object is a Backbone collection of a certain type of Model.
 var isCollectionOf = function (m, Model) {
-  return Model && m instanceof Backbone.Collection && m.model === Model;
+  return Model &&
+    m instanceof Backbone.Collection &&
+    m.model === Model;
 };
 
 // Checks if the given module is a plug.dj Dialog view class.
 var isDialog = function (m) {
-  return m.prototype && m.prototype.className && m.prototype.className.indexOf('dialog') !== -1;
+  return m.prototype &&
+    m.prototype.className &&
+    typeof m.prototype.onContainerClick === 'function';
 };
 
 // Checks if two functions are "kind of similar" by comparing their source.
