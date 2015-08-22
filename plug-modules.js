@@ -570,7 +570,7 @@ var plugModules = {
     return m.prototype && m.prototype._map === null && _.isFunction(m.prototype.adopt);
   },
   'plug/util/emoji': function (m) {
-    return _.isFunction(m.emojify) && m.map && 'shipit' in m.map;
+    return _.isFunction(m.replace_emoticons);
   },
   'plug/util/Environment': function (m) {
     return 'isChrome' in m && 'isAndroid' in m;
