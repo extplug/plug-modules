@@ -61,7 +61,7 @@ var hasAttributes = function (m, attributes) {
 function Context(target) {
   this._nameMapping = {};
   this._notFound = [];
-  this._detectives = [];
+  this._detectives = {};
   this._ran = false;
   this.target = target
   if (!target) try {
