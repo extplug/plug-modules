@@ -710,7 +710,7 @@ var plugModules = {
     return _.isFunction(m.onMediaChange) && _.isFunction(m.onStartTimeChange);
   },
   'plug/models/currentRoom': function (m) {
-    return m instanceof Backbone.Model && _.isArray(m.get('fx'));
+    return m instanceof Backbone.Model && 'fx' in m.attributes;
   },
   'plug/models/currentScore': function (m) {
     return _.isFunction(m.vote) && _.isFunction(m.grab) && _.isFunction(m.advance);
