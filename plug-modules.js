@@ -1231,6 +1231,9 @@ var plugModules = {
   'plug/views/playlists/media/panels/MediaActionsView': function (m) {
     return isView(m) && m.prototype.className === 'actions';
   },
+  'plug/views/playlists/media/panels/MediaRowView': function (m) {
+    return isView(m) && m.actions;
+  },
   'plug/views/playlists/media/panels/ImportPlaylistsPanelView': function (m) {
     return isView(m) &&
       !m.prototype.collection &&
