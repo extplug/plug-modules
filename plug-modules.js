@@ -1240,6 +1240,21 @@ var plugModules = {
       m.prototype.className &&
       m.prototype.className.indexOf('import-playlist-list') > -1;
   },
+  'plug/views/playlists/media/panels/SoundCloudSetsPanelView': new SimpleMatcher(function (m) {
+    var soundCloudPlaylists = this.require('plug/collections/soundCloudPlaylists');
+    return isView(m) && m.prototype.collection === soundCloudPlaylists &&
+      m.prototype.hasOwnProperty('onRowRelease');
+  }).needs('plug/collections/soundCloudPlaylists'),
+  'plug/views/playlists/media/panels/SoundCloudSetPanelView': new SimpleMatcher(function (m) {
+    var soundCloudPlaylists = this.require('plug/collections/soundCloudPlaylists');
+    var ImportPlaylistRowView = this.require('plug/views/playlists/media/panels/YouTubePlaylistRowView');
+    return isView(m) && m.prototype.collection === soundCloudPlaylists &&
+      m.prototype.listClass === 'import-media' &&
+      m.prototype.RowClass === ImportPlaylistRowView;
+  }).needs(
+    'plug/collections/soundCloudPlaylists',
+    'plug/views/playlists/media/panels/YouTubePlaylistRowView'
+  ),
   'plug/views/playlists/media/panels/YouTubePlaylistsPanelView': new SimpleMatcher(function (m) {
     var youTubePlaylists = this.require('plug/collections/youTubePlaylists');
     return isView(m) && m.prototype.collection === youTubePlaylists &&
