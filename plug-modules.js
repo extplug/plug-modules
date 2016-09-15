@@ -1274,6 +1274,17 @@ var plugModules = {
     var Panel = this.require('plug/views/playlists/media/panels/YouTubePlaylistPanelView');
     return Panel.prototype.RowClass;
   }).needs('plug/views/playlists/media/panels/YouTubePlaylistPanelView'),
+  'plug/views/playlists/media/panels/RestrictedMediaAlternativesPanelView': new SimpleMatcher(function (m) {
+    const collection = this.require('plug/collections/restrictedMediaAlternatives');
+    return isView(m) && m.prototype.collection === collection &&
+      _.isFunction(m.prototype.showLoadSpinner);
+  }).needs('plug/collections/restrictedMediaAlternatives'),
+  'plug/views/playlists/media/panels/RestrictedMediaAlternativesRowView': new SimpleFetcher(function () {
+    var Panel = this.require('plug/views/playlists/media/panels/RestrictedMediaAlternativesPanelView');
+    var p = new Panel();
+    p.drawRow(new Backbone.Model({}), 1);
+    return p.rows.pop().constructor;
+  }).needs('plug/views/playlists/media/panels/RestrictedMediaAlternativesPanelView'),
   'plug/views/playlists/media/panels/PlaylistSearchPanelView': new SimpleMatcher(function (m) {
     return isView(m) &&
       m.prototype.listClass === 'search-playlists' &&
