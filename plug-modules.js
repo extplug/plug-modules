@@ -471,9 +471,9 @@ var plugModules = {
       functionContains(m.prototype.load, '/me/playlists');
   },
   'plug/actions/soundcloud/SoundCloudPermalinkService': function (m) {
-    return _.isFunction(m) && functionContains(m.prototype.load, 'api.soundcloud.com/tracks') &&
-      !functionContains(m.prototype.onError, 'Search') &&
-      _.isFunction(m.prototype.onComplete);
+    return _.isFunction(m) &&
+      _.isFunction(m.prototype.onComplete) &&
+      functionContains(m.prototype.onComplete, 'permalink_url');
   },
   'plug/actions/staff/StaffListAction': new ActionMatcher('GET', 'staff'),
   'plug/actions/staff/StaffRemoveAction': new ActionMatcher('DELETE', null, 'staff/'),
