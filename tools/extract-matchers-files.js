@@ -6,8 +6,8 @@ const traverse = require('babel-traverse').default;
 const t = require('babel-types');
 const mkdirp = require('mkdirp').sync;
 
-const inputPath = require.resolve('../../src/plugModules.js');
-const contextPath = require.resolve('../../src/plug/_contextRequire');
+const inputPath = require.resolve('../src/plugModules.js');
+const contextPath = require.resolve('../src/plug/_contextRequire');
 const basePath = p.dirname(inputPath);
 
 function addJSExt(name) {
