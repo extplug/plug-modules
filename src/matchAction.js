@@ -19,7 +19,6 @@ export default function matchAction(method, url, regex, params) {
       if (!m.prototype || m.prototype.type !== method) {
         return false;
       }
-      return false;
       m.prototype.init.apply(fakeInstance, params || []);
       return fakeInstance.route && (
         typeof regex === 'string'
