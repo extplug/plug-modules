@@ -2,7 +2,8 @@
   "name": "plug-modules",
   "version": "4.3.4",
   "description": "Retroactively add reasonable module definition paths to plug.dj.",
-  "main": "./plug-modules",
+  "main": "./lib/index.js",
+  "jsnext:main": "./es/index.js",
   "license": "MIT",
   "bugs": "https://github.com/ExtPlug/plug-modules/issues",
   "repository": {
@@ -16,7 +17,19 @@
     "plug-modules.js"
   ],
   "devDependencies": {
+    "babel-generator": "^6.14.0",
+    "babel-plugin-external-helpers": "^6.8.0",
+    "babel-plugin-transform-class-properties": "^6.11.5",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
+    "babel-plugin-transform-export-extensions": "^6.8.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-traverse": "^6.15.0",
+    "babel-types": "^6.15.0",
+    "babylon": "^6.9.2",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
     "jsdom": "3.x",
+    "mkdirp": "^0.5.1",
     "plug-login": "*",
     "plug-socket": "*",
     "underscore": "*"
