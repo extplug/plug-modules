@@ -1,1 +1,3 @@
-export default Symbol('original module name');
+export default typeof Symbol === 'undefined'
+  ? `__${Math.random()}original module name`
+  : Symbol('original module name');
