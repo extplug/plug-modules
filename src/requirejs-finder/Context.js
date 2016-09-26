@@ -1,4 +1,4 @@
-import { difference, keys, values } from 'underscore';
+import { difference, values } from 'underscore';
 import originalModuleName from './originalModuleName';
 import rewrittenModuleName from './rewrittenModuleName';
 
@@ -34,9 +34,9 @@ export default class Context {
 
   // adds a Detective to this context. these detectives will
   // be run by Context#run.
-  add(name, detective) {
+  add(name, getter) {
     this._detectives[name] = {
-      detective: detective,
+      getName: getter,
       ran: false
     };
     return this;
@@ -54,25 +54,15 @@ export default class Context {
   }
 
   findModule(name) {
-    var detective = this._detectives[name];
+    const detective = this._detectives[name];
     if (detective && !detective.ran) {
-      if (typeof detective.detective === 'function') {
-        const moduleName = detective.detective(this);
-        if (moduleName) {
-          this.define(name, moduleName);
-        }
-      } else {
-        if (!detective.detective.isReady(this)) {
-          detective.detective.getDependencies().forEach(function (dep) {
-            this.require(dep);
-          }, this);
-        }
-        detective.detective.run(this, name);
-      }
-      detective.ran = true;
-      if (this.isDefined(name)) {
+      const moduleName = detective.getName(this);
+      if (moduleName) {
+        this.define(name, moduleName);
+        detective.ran = true;
         return this.require(name);
       }
+      detective.ran = true;
     }
   }
 
@@ -100,11 +90,10 @@ export default class Context {
 
   define(newPath, oldPath) {
     this._nameMapping[newPath] = oldPath;
-    var mod = this.require(oldPath);
-    if (!mod.__plugModule) {
-      mod.__plugModule = newPath;
+    const mod = this.require(oldPath);
+    if (mod) {
+      mod[rewrittenModuleName] = newPath;
     }
-    mod[rewrittenModuleName] = newPath;
     return this;
   }
 
@@ -114,7 +103,7 @@ export default class Context {
 
   getUnknownModules() {
     const knownModules = values(this._nameMapping);
-    const allModules = keys(this.target).filter(moduleName => (
+    const allModules = Object.keys(this.target).filter(moduleName => (
       moduleName.substr(0, 5) !== 'plug/' &&
         moduleName.substr(0, 4) !== 'hbs!' &&
         this.require(moduleName) !== undefined
@@ -131,8 +120,8 @@ export default class Context {
 
   // Add the new names to the global module registry
   register() {
-    for (var newName in this._nameMapping) if (this._nameMapping.hasOwnProperty(newName)) {
+    Object.keys(this._nameMapping).forEach(newName => {
       this.target[newName] = this.require(newName);
-    }
+    });
   }
 }
