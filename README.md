@@ -11,7 +11,7 @@ access internal plug.dj javascript.
 
 `plug-modules` makes it easy to use plug.dj's client-side internals.
 Remember that plug.dj's internal JavaScript is *not* meant to be a
-public API. It changes a lot! Modules that you used yesterday, may not
+public API. It sometimes changes! Modules that you used yesterday, may not
 exist tomorrow, so make sure to code very defensively and to fall back
 gracefully.
 
