@@ -3,7 +3,9 @@
 Maps plug.dj defined modules to reasonable names, so you can more easily
 access internal plug.dj javascript.
 
-[![NPM](https://nodei.co/npm/plug-modules.png?downloads)](https://nodei.co/npm/plug-modules)
+[Warning] - [Usage] - [API] - [How It Works] - [License]
+
+[![NPM](https://nodei.co/npm/plug-modules.png?downloads)](https://npmjs.com/package/plug-modules)
 
 ## Warning!
 
@@ -15,16 +17,33 @@ gracefully.
 
 ## Usage
 
-`plug-modules` is available on npm:
+If you're writing an extension for use on plug.dj, the easiest way to use
+plug-modules is using the require.js loader plugin. First, configure require.js
+to load plug-modules correctly, and then simply `require()` the stuff you need:
+
+```js
+requirejs.config({
+  paths: {
+    'plug-modules': 'https://unpkg.com/plug-modules/plug-modules'
+  }
+});
+
+require(['plug-modules!plug/core/Events'], function (Events) {
+  Events.trigger('notify', 'icon-plug-dj', 'plug-modules works!');
+});
 ```
+
+If you don't like require.js, `plug-modules` is available on npm so you can
+bundle something yourself:
+
+```bash
 $ npm install plug-modules
 ```
 
 You can then use it as a CommonJS module, or an AMD module, or just as
 `window.plugModules` when loaded in a `<script>` tag.
 
-Initialise the name mapping using `plugModules.run()`, and then you
-can access plug.dj modules like:
+After loading plug-modules, you can access plug.dj modules like:
 
 ```javascript
 var SubClass = plugModules.require('plug/core/Class').extend({
@@ -93,15 +112,25 @@ plugModules.isDefined('module') === false
 
 Returns an array of **original** module names that were *not* remapped.
 This is mostly useful for finding more modules to reverse-engineer.
-Note that this is only useful if you've run _all_ detectives, otherwise
+Note that this is only useful if you've run _all_ resolvers, otherwise
 modules that haven't yet been used won't be remapped.
 
 ## How It Works
 
-`plug-modules` contains several hundred "Detectives" who find different
-modules by duck-typing. They then associate those modules with a
-descriptive and readable name each. You can call
-`plugModules.register()` to inject all those names back into require.js,
-so you can use the global `require()` function on plug.dj.
-Or better, you can use `plugModules.require()` if you don't want to
+`plug-modules` contains several hundred resolver functions that find different
+modules by duck-typing. They then associate those modules with a descriptive and
+readable name each. You can call `plugModules.register()` to inject all those
+names back into require.js, so you can use the global `require()` function on
+plug.dj. Or better, you can use `plugModules.require()` if you don't want to
 contaminate the global module-space.
+
+## License
+
+[MIT]
+
+[Warning]: #warning
+[Usage]: #usage
+[API]: #api
+[How It Works]: #how-it-works
+[License]: #license
+[MIT]: ./LICENSE
