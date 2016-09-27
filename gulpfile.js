@@ -58,8 +58,8 @@ gulp.task('rollup', () =>
 gulp.task('rollup:min', ['rollup'], () =>
   gulp.src('./lib/browser.js')
     .pipe(uglify())
-    .pipe(rename('browser.min.js'))
-    .pipe(gulp.dest('./lib'))
+    .pipe(rename('plug-modules.js'))
+    .pipe(gulp.dest('./'))
 );
 
 gulp.task('default', ['build', 'rollup:min']);
