@@ -26,6 +26,7 @@
     "babel-traverse": "^6.15.0",
     "babel-types": "^6.15.0",
     "babylon": "^6.9.2",
+    "del": "^2.2.2",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "jsdom": "3.x",

@@ -1,6 +1,14 @@
 const gulp = require('gulp');
+const del = require('del');
 const babel = require('gulp-babel');
 const generateMatchFiles = require('./tools/extract-matchers-files');
+
+gulp.task('clean', () => del([
+  './es',
+  './lib',
+  './src/plug/*',
+  '!./src/plug/_contextRequire.js'
+]));
 
 gulp.task('generate:imports', () => {
   // Sync :x
@@ -24,3 +32,5 @@ gulp.task('build', ['generate:imports'], () =>
     }))
     .pipe(gulp.dest('./lib'))
 );
+
+gulp.task('default', ['build']);
