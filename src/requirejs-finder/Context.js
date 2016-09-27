@@ -20,7 +20,7 @@ export default class Context {
     if (!target) try {
       this.target = requirejs.s.contexts._.defined;
     } catch (e) {
-      this.target = null
+      this.target = null;
     }
 
     if (this.target) {
