@@ -11,12 +11,10 @@
     "type": "git",
     "url": "https://github.com/ExtPlug/plug-modules.git"
   },
-  "files": [
-    "package.json",
-    "README.md",
-    "LICENSE",
-    "plug-modules.js"
-  ],
+  "scripts": {
+    "build": "gulp",
+    "prepublish": "npm run build"
+  },
   "devDependencies": {
     "babel-generator": "^6.14.0",
     "babel-plugin-external-helpers": "^6.8.0",
