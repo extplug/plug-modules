@@ -20,7 +20,13 @@ export default function matchAction(method, url, regex, params) {
       if (!m.prototype || m.prototype.type !== method) {
         return false;
       }
-      m.prototype.init.apply(fakeInstance, params || []);
+
+      try {
+        m.prototype.init.apply(fakeInstance, params || []);
+      } catch (e) {
+        return false;
+      }
+
       return fakeInstance.route && (
         typeof regex === 'string'
           ? fakeInstance.route.indexOf(regex) === 0
