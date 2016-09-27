@@ -124,4 +124,14 @@ export default class Context {
       this.target[newName] = this.require(newName);
     });
   }
+
+  // require.js loader API.
+  load(name, req, cb, config) {
+    const result = this.require(name);
+    if (result) {
+      cb(result);
+    } else {
+      cb.error(new Error(`module "${name}" not found`));
+    }
+  }
 }

@@ -36,11 +36,11 @@ export function hasAttributes(m, attributes) {
 
 // Checks if a View template contains an element matching a given CSS selector.
 export function viewHasElement(View, sel) {
-  let stubEl = $('<div>');
+  const stubEl = $('<div>');
   try {
-    let x = new View({ el: stubEl });
+    const x = new View({ el: stubEl });
     x.render();
-    let has = x.$(sel).length > 0;
+    const has = x.$(sel).length > 0;
     x.destroy();
     return has;
   } catch (e) {
