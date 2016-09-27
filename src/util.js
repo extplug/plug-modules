@@ -43,8 +43,7 @@ export function viewHasElement(View, sel) {
     let has = x.$(sel).length > 0;
     x.destroy();
     return has;
-  }
-  catch (e) {
+  } catch (e) {
     return false;
   }
 }

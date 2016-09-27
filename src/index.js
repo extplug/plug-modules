@@ -8,8 +8,6 @@ Object.keys(modules).forEach(name => {
   context.add(name, modules[name]);
 });
 
+context.modules = modules;
+
 export default context;
-
-export { modules };
-
-window.PMM = context;

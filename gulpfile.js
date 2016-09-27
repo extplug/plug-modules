@@ -1,7 +1,21 @@
 const gulp = require('gulp');
 const del = require('del');
 const babel = require('gulp-babel');
+const uglify = require('gulp-uglify');
+const rename = require('gulp-rename');
+const rollup = require('rollup').rollup;
+const rollupBabel = require('rollup-plugin-babel');
 const generateMatchFiles = require('./tools/extract-matchers-files');
+
+const babelConfig = {
+  presets: [
+    ['es2015', { loose: true, modules: false }],
+  ],
+  plugins: [
+    'transform-class-properties',
+    'transform-export-extensions',
+  ],
+};
 
 gulp.task('clean', () => del([
   './es',
@@ -17,15 +31,7 @@ gulp.task('generate:imports', () => {
 
 gulp.task('build', ['generate:imports'], () =>
   gulp.src('./src/**/*.js')
-    .pipe(babel({
-      presets: [
-        ['es2015', { loose: true, modules: false }],
-      ],
-      plugins: [
-        'transform-class-properties',
-        'transform-export-extensions',
-      ],
-    }))
+    .pipe(babel(babelConfig))
     .pipe(gulp.dest('./es'))
     .pipe(babel({
       plugins: ['transform-es2015-modules-commonjs'],
@@ -33,4 +39,27 @@ gulp.task('build', ['generate:imports'], () =>
     .pipe(gulp.dest('./lib'))
 );
 
-gulp.task('default', ['build']);
+gulp.task('rollup', () =>
+  rollup({
+    entry: './src/index.js',
+    plugins: [
+      rollupBabel(babelConfig),
+    ],
+  }).then(bundle => bundle.write({
+    dest: './lib/browser.js',
+    format: 'umd',
+    moduleName: 'plugModules',
+    globals: {
+      underscore: '_',
+    },
+  }))
+);
+
+gulp.task('rollup:min', ['rollup'], () =>
+  gulp.src('./lib/browser.js')
+    .pipe(uglify())
+    .pipe(rename('browser.min.js'))
+    .pipe(gulp.dest('./lib'))
+);
+
+gulp.task('default', ['build', 'rollup:min']);
