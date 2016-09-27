@@ -5,6 +5,7 @@ const fakeInstance = {
     return () => {};
   },
   set _super(fn) {},
+  execute() {},
 };
 
 export default function matchAction(method, url, regex, params) {
