@@ -8,10 +8,17 @@ export function isDialog(m) {
   return m.prototype && m.prototype.className && m.prototype.className.indexOf('dialog') !== -1;
 }
 
+// Normalize source code of a function for simpler comparison.
+function normalizeFunctionSource(str) {
+  // Account for minification differences
+  return str.replace(/void 0/g, 'undefined')
+    // Ignore whitespace differences
+    .replace(/\s+/g, '');
+}
+
 // Checks if two functions are "kind of similar" by comparing their source.
 export function functionsSeemEqual(a, b) {
-  // ignore whitespace
-  return (a + '').replace(/\s/g, '') === (b + '').replace(/\s/g, '');
+  return normalizeFunctionSource(a + '') === normalizeFunctionSource(b + '');
 }
 
 // Checks if a function's source contains a given string.
