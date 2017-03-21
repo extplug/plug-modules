@@ -30,10 +30,7 @@
     "gulp-babel": "^6.1.2",
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^2.0.0",
-    "jsdom": "3.x",
     "mkdirp": "^0.5.1",
-    "plug-login": "*",
-    "plug-socket": "*",
     "rollup": "^0.36.0",
     "rollup-plugin-babel": "^2.6.1",
     "underscore": "*"
