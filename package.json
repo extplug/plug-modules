@@ -1,6 +1,6 @@
 {
   "name": "plug-modules",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Retroactively add reasonable module definition paths to plug.dj.",
   "main": "./lib/index.js",
   "jsnext:main": "./es/index.js",
