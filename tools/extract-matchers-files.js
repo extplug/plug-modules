@@ -10,6 +10,14 @@ const inputPath = require.resolve('../src/plugModules.js');
 const contextPath = require.resolve('../src/plug/_contextRequire');
 const basePath = p.dirname(inputPath);
 
+function relativePath(from, to) {
+  const rel = p.relative(from, to);
+  if (!/^\.+\//.test(rel)) {
+    return `./${rel}`;
+  }
+  return rel;
+}
+
 function addJSExt(name) {
   return /\.js$/.test(name) ? name : `${name}.js`;
 }
@@ -33,7 +41,7 @@ function getDependencies(matcher, importingPath) {
       }
       const importDecl = binding.path.parentPath;
       if (importDecl.isImportDeclaration()) {
-        const importPath = p.relative(
+        const importPath = relativePath(
           importingPath,
           p.join(basePath, importDecl.get('source').node.value)
         );
@@ -49,7 +57,7 @@ function getDependencies(matcher, importingPath) {
   if (matcher.get('callee').isIdentifier({ name: 'depends' })) {
     const params = [];
     matcher.get('arguments.0.elements').forEach((path, i) => {
-      const importPath = p.relative(
+      const importPath = relativePath(
         importingPath,
         p.join(basePath, path.node.value)
       );
@@ -89,7 +97,7 @@ function extract() {
         files[pathname] = t.program(deps.concat([
           t.importDeclaration(
             [t.importDefaultSpecifier(t.identifier('contextRequire'))],
-            t.stringLiteral(p.relative(currentDir, contextPath))
+            t.stringLiteral(relativePath(currentDir, contextPath))
           ),
           t.exportDefaultDeclaration(t.callExpression(
             t.identifier('contextRequire'),
