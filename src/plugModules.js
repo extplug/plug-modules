@@ -797,6 +797,9 @@ export default {
     ['plug/views/dialogs/UserRoleDialog'],
     UserRoleDialog => fetch(() => UserRoleDialog)
   ),
+  'plug/views/dialogs/SOSDialog': match(m =>
+    isDialog(m) && m.prototype.id === 'dialog-sos'
+  ),
   'plug/views/dialogs/TutorialDialog': match(m =>
     isDialog(m) && m.prototype.id === 'dialog-preview' &&
       m.prototype.className.indexOf('tutorial') !== -1
