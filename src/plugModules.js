@@ -118,6 +118,11 @@ export default {
       _.isFunction(m.prototype.onComplete) &&
       functionContains(m.prototype.onComplete, 'permalink_url')
   ),
+  'plug/actions/soundcloud/SoundCloudUserTracksService': match(m =>
+    _.isFunction(m) &&
+      _.isFunction(m.prototype.onError) &&
+      functionContains(m.prototype.onError, 'SoundCloud User Tracks')
+  ),
   'plug/actions/staff/StaffListAction': matchAction('GET', 'staff'),
   'plug/actions/staff/StaffRemoveAction': matchAction('DELETE', null, 'staff/'),
   'plug/actions/staff/StaffUpdateAction': matchAction('POST', 'staff/update'),
@@ -693,6 +698,12 @@ export default {
   ),
   'plug/views/footer/TwitterMenuView': match(m =>
     isView(m) && m.prototype.id === 'twitter-menu'
+  ),
+  'plug/views/footer/AndroidBadgeView': match(m =>
+    isView(m) && m.prototype.id === 'androidbadge-menu'
+  ),
+  'plug/views/footer/IOSBadgeView': match(m =>
+    isView(m) && m.prototype.id === 'iosbadge-menu'
   ),
   'plug/views/footer/UserInfoView': match(m =>
     isView(m) && m.prototype.className === 'info'
