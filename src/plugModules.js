@@ -752,6 +752,9 @@ export default {
   'plug/views/dialogs/ForceSkipDialog': match(m =>
     isDialog(m) && m.prototype.id === 'dialog-skip'
   ),
+  'plug/views/dialogs/ForcedOfferDialog': match(m =>
+    isDialog(m) && m.prototype.id === 'dialog-forced-offer'
+  ),
   'plug/views/dialogs/GiftSendDialog': match(m =>
     isDialog(m) && m.prototype.id === 'dialog-gift-send'
   ),
