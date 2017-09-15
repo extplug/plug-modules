@@ -278,6 +278,7 @@ export default {
   'plug/handlers/ImportSoundCloudHandler': fetchHandler('ImportSoundCloudEvent:sets'),
   'plug/handlers/ImportYouTubeHandler': fetchHandler('ImportYouTubeEvent:import'),
   'plug/handlers/ListBansHandler': fetchHandler('UserListEvent:bans'),
+  'plug/handlers/ListWaitlistBansHandler': fetchHandler('UserListEvent:waitlistBans'),
   'plug/handlers/ListFriendsHandler': fetchHandler('UserEvent:friends'),
   'plug/handlers/ListIgnoresHandler': fetchHandler('UserListEvent:ignored'),
   'plug/handlers/ListInvitesHandler': fetchHandler('UserEvent:invites'),
@@ -316,6 +317,7 @@ export default {
   'plug/handlers/UserHistoryHandler': fetchHandler('HistorySyncEvent:user'),
   'plug/handlers/UserMeHandler': fetchHandler('UserEvent:me'),
   'plug/handlers/UserRolloverHandler': fetchHandler('ShowUserRolloverEvent:show'),
+  'plug/handlers/WaitlistUnbanHandler': fetchHandler('ModerateEvent:unwaitlistban'),
 
   'plug/models/Avatar': match(m =>
     m.AUDIENCE && m.DJ && _.isObject(m.IMAGES)
