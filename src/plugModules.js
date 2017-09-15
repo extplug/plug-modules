@@ -190,6 +190,7 @@ export default {
 
   'plug/lang/Lang': match(m => 'alerts' in m && 'addedToPlaylist' in m.alerts),
 
+  'plug/util/adblock': match(m => _.isFunction(m.check)),
   'plug/util/analytics': match(m => _.isFunction(m.identify)),
   'plug/util/API': match(m => 'WAIT_LIST_UPDATE' in m && 'CHAT_COMMAND' in m),
   'plug/util/audienceGrid': match(m =>
@@ -211,6 +212,7 @@ export default {
     _.isFunction(m) && m.MASTER instanceof m && _.isFunction(m.MASTER.newSeed)
   ),
   'plug/util/soundCloudSdkLoader': match(m => _.isFunction(m.g) && _.isString(m.id)),
+  'plug/util/tracker': match(m => _.isFunction(m.track) && m.tracker),
   'plug/util/twitterWidgetLoader': match(m => m.f && _.isFunction(m.i)),
   'plug/util/urls': match(m => 'csspopout' in m && 'scThumbnail' in m),
   'plug/util/userSuggestion': match(m =>
