@@ -564,7 +564,7 @@ export default {
   ),
   'plug/collections/transactions': depends(
     ['plug/models/Transaction'],
-    Transaction => match(m => isCollectionOf(Transaction))
+    Transaction => match(m => isCollectionOf(m, Transaction))
   ),
   'plug/collections/userHistory': depends(
     ['plug/handlers/UserHistoryHandler'],
