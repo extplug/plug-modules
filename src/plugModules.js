@@ -33,6 +33,9 @@ function compose(...funcs) {
 }
 
 export default {
+  'uuid-js': match(m =>
+    _.isFunction(m.create) && _.isFunction(m.randomUI08)
+  ),
   'plug/actions/Action': match(m =>
     m.prototype && _.isFunction(m.prototype.alert) && _.isFunction(m.prototype.permissionAlert)
   ),
