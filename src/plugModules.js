@@ -679,7 +679,7 @@ export default {
       // the RoomHeader looks a lot like this, but does not have its own
       // remove() method
       m.prototype.hasOwnProperty('remove') &&
-      !m.prototype.hasOwnProperty('initialize')
+      m.prototype.hasOwnProperty('initialize')
   ),
   'plug/views/dashboard/news/NewsView': match(m => isView(m) && m.prototype.id === 'news'),
   'plug/views/dashboard/news/NewsRowView': depends(
