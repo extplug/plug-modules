@@ -90,6 +90,8 @@ export default {
   'plug/actions/playlists/PlaylistRenameAction': matchAction('PUT', null, /\/rename$/),
   'plug/actions/playlists/PlaylistShuffleAction': matchAction('PUT', null, /\/shuffle$/),
   'plug/actions/profile/SetBlurbAction': matchAction('PUT', 'profile/blurb'),
+  'plug/actions/push/AcceptPushNotificationsAction': matchAction('POST', 'pushnotifications'),
+  'plug/actions/push/DeclinePushNotificationsAction': matchAction('DELETE', 'pushnotifications/'),
   'plug/actions/rooms/ListFavoritesAction': matchAction('GET', null, 'rooms/favorites'),
   'plug/actions/rooms/ListMyRoomsAction': matchAction('GET', 'rooms/me'),
   'plug/actions/rooms/ListRoomsAction': matchAction('GET', null, 'rooms?q='),
