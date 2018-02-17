@@ -41,14 +41,14 @@ gulp.task('build', ['generate:imports'], () =>
 
 gulp.task('rollup', () =>
   rollup({
-    entry: './src/index.js',
+    input: './src/index.js',
     plugins: [
       rollupBabel(babelConfig),
     ],
   }).then(bundle => bundle.write({
-    dest: './lib/browser.js',
+    file: './lib/browser.js',
     format: 'umd',
-    moduleName: 'plugModules',
+    name: 'plug-modules',
     globals: {
       underscore: '_',
     },
