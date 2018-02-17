@@ -10,12 +10,12 @@ const getNamespace = full => full.substr(0, full.lastIndexOf('/'));
  * for working with renamed modules.
  */
 export default class Context {
-  _nameMapping = {};
-  _notFound = [];
-  _detectives = {};
-  _ran = false;
-
   constructor(target) {
+    this._nameMapping = {};
+    this._notFound = [];
+    this._detectives = {};
+    this._ran = false;
+
     this.target = target
     if (!target) try {
       this.target = requirejs.s.contexts._.defined;

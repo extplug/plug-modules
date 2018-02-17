@@ -9,10 +9,9 @@ const generateMatchFiles = require('./tools/extract-matchers-files');
 
 const babelConfig = {
   presets: [
-    ['es2015', { loose: true, modules: false }],
+    ['env', { loose: true, modules: false }],
   ],
   plugins: [
-    'transform-class-properties',
     'transform-export-extensions',
   ],
 };
