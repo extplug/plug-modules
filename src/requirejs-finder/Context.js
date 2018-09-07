@@ -13,7 +13,7 @@ export default class Context {
   constructor(target) {
     this._nameMapping = {};
     this._notFound = [];
-    this._detectives = {};
+    this._finders = {};
     this._ran = false;
 
     this.target = target
@@ -32,37 +32,37 @@ export default class Context {
     }
   }
 
-  // adds a Detective to this context. these detectives will
+  // adds a module finder to this context. these finders will
   // be run by Context#run.
   add(name, getter) {
-    this._detectives[name] = {
+    this._finders[name] = {
       getName: getter,
       ran: false
     };
     return this;
   }
-  // runs all known detectives.
+  // runs all finders.
   run() {
     if (this._ran) {
       return this;
     }
 
-    Object.keys(this._detectives).forEach(this.require, this);
+    Object.keys(this._finders).forEach(this.require, this);
 
     this._ran = true;
     return this;
   }
 
   findModule(name) {
-    const detective = this._detectives[name];
-    if (detective && !detective.ran) {
-      const moduleName = detective.getName(this);
+    const finder = this._finders[name];
+    if (finder && !finder.ran) {
+      const moduleName = finder.getName(this);
       if (moduleName) {
         this.define(name, moduleName);
-        detective.ran = true;
+        finder.ran = true;
         return this.require(name);
       }
-      detective.ran = true;
+      finder.ran = true;
     }
   }
 
