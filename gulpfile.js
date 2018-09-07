@@ -1,7 +1,7 @@
 const gulp = require('gulp');
 const del = require('del');
 const babel = require('gulp-babel');
-const uglify = require('gulp-uglify');
+const terser = require('gulp-terser');
 const rename = require('gulp-rename');
 const rollup = require('rollup').rollup;
 const rollupBabel = require('rollup-plugin-babel');
@@ -50,7 +50,7 @@ gulp.task('rollup', () =>
 
 const minify = () =>
   gulp.src('./lib/browser.js')
-    .pipe(uglify())
+    .pipe(terser())
     .pipe(rename('plug-modules.js'))
     .pipe(gulp.dest('./'));
 gulp.task('rollup:min', gulp.series('rollup', minify));
