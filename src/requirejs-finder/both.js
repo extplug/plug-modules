@@ -1,6 +1,9 @@
 import match from './match';
 import internalGetMatcher from './internalGetMatcher';
 
+/**
+ * Create a matcher function that matches when both given matcher functions do.
+ */
 export default function both(getA, getB) {
   const a = getA[internalGetMatcher];
   const b = getB[internalGetMatcher];

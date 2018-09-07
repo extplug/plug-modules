@@ -1,3 +1,8 @@
+/**
+ * Create a matcher function that depends on some other module.
+ * This will only match once that dependency is available. The dependencies
+ * are passed to the wrapped function as arguments.
+ */
 export default function depends(paths, fn) {
   const l = paths.length;
   return (context) => {
