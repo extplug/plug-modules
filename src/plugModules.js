@@ -330,14 +330,13 @@ export default {
     m.AUDIENCE && m.DJ && _.isObject(m.IMAGES)
   ),
   'plug/models/Badge': match(m =>
-    hasDefaults(m) && 'level' in m.prototype.defaults && 'name' in m.prototype.defaults &&
-      !('category' in m.prototype.defaults) && 'active' in m.prototype.defaults
+    hasDefaults(m, ['level', 'name', 'active']) && !('category' in m.prototype.defaults)
   ),
   'plug/models/BannedUser': match(m =>
-    hasDefaults(m) && 'moderator' in m.prototype.defaults && 'duration' in m.prototype.defaults
+    hasDefaults(m, ['moderator', 'duration'])
   ),
   'plug/models/booth': match(m =>
-    hasAttributes(m, [ 'isLocked', 'shouldCycle' ])
+    hasAttributes(m, ['isLocked', 'shouldCycle'])
   ),
   'plug/models/currentMedia': match(m =>
     _.isFunction(m.onMediaChange) && _.isFunction(m.onStartTimeChange)
@@ -352,44 +351,43 @@ export default {
     _.isArray(m._l) && _.isArray(m._x)
   ),
   'plug/models/HistoryEntry': match(m =>
-    hasDefaults(m) && 'timestamp' in m.prototype.defaults && 'score' in m.prototype.defaults
+    hasDefaults(m, ['timestamp', 'score'])
   ),
   'plug/models/Media': match(m =>
-    hasDefaults(m) && 'cid' in m.prototype.defaults && 'format' in m.prototype.defaults
+    hasDefaults(m, ['cid', 'format'])
   ),
   'plug/models/MediaSearchResult': match(m =>
-    hasDefaults(m) && 'media' in m.prototype.defaults && 'playlist' in m.prototype.defaults
+    hasDefaults(m, ['media', 'playlist'])
   ),
   'plug/models/MutedUser': match(m =>
-    hasDefaults(m) && 'moderator' in m.prototype.defaults && 'expires' in m.prototype.defaults
+    hasDefaults(m, ['moderator', 'expires'])
   ),
   'plug/models/Notification': match(m =>
-    hasDefaults(m) && 'action' in m.prototype.defaults && 'value' in m.prototype.defaults
+    hasDefaults(m, ['action', 'value'])
   ),
   'plug/models/Playlist': match(m =>
-    hasDefaults(m) && 'active' in m.prototype.defaults && 'syncing' in m.prototype.defaults
+    hasDefaults(m, ['active', 'syncing'])
   ),
   'plug/models/Room': match(m =>
-    hasDefaults(m) && 'slug' in m.prototype.defaults && 'capacity' in m.prototype.defaults
+    hasDefaults(m, ['slug', 'capacity'])
   ),
   'plug/models/SoundCloudPlaylist': match(m =>
-    hasDefaults(m) && 'title' in m.prototype.defaults && 'tracks' in m.prototype.defaults
+    hasDefaults(m, ['title', 'tracks'])
   ),
   'plug/models/StoreExtra': match(m =>
-    hasDefaults(m) && 'category' in m.prototype.defaults && 'name' in m.prototype.defaults &&
-      !('active' in m.prototype.defaults)
+    hasDefaults(m, ['category', 'name']) && !('active' in m.prototype.defaults)
   ),
   'plug/models/Transaction': match(m =>
-    hasDefaults(m) && 'type' in m.prototype.defaults && 'item' in m.prototype.defaults
+    hasDefaults(m, ['type', 'item'])
   ),
   'plug/models/User': match(m =>
-    hasDefaults(m) && 'avatarID' in m.prototype.defaults && 'role' in m.prototype.defaults
+    hasDefaults(m, ['avatarID', 'role'])
   ),
   'plug/models/YouTubePlaylist': match(m =>
-    hasDefaults(m) && 'playlistID' in m.prototype.defaults && 'username' in m.prototype.defaults
+    hasDefaults(m, ['playlistID', 'username'])
   ),
   'plug/models/relatedSearch': match(m =>
-    hasAttributes(m, [ 'related', 'relatedPlaylist' ])
+    hasAttributes(m, ['related', 'relatedPlaylist'])
   ),
 
   'plug/collections/allAvatars': match(m =>

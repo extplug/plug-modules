@@ -32,8 +32,8 @@ export function isView(m) {
 }
 
 // Checks if a given Backbone Model class has a defaults property (plug.dj models).
-export function hasDefaults(m) {
-  return m.prototype && m.prototype.defaults;
+export function hasDefaults(m, names = []) {
+  return m.prototype && m.prototype.defaults && names.every(name => name in m.prototype.defaults);
 }
 
 // Checks if an object has some set of attributes (Backbone models).
