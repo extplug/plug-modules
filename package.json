@@ -26,7 +26,7 @@
     "babel-types": "^6.15.0",
     "babylon": "^6.9.2",
     "del": "^3.0.0",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.0",
     "gulp-babel": "^7.0.1",
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^3.0.0",

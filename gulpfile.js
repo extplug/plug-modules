@@ -47,11 +47,11 @@ gulp.task('rollup', () =>
   }))
 );
 
-gulp.task('rollup:min', ['rollup'], () =>
+const minify = () =>
   gulp.src('./lib/browser.js')
     .pipe(uglify())
     .pipe(rename('plug-modules.js'))
-    .pipe(gulp.dest('./'))
-);
+    .pipe(gulp.dest('./'));
+gulp.task('rollup:min', gulp.series('rollup', minify));
 
-gulp.task('default', ['build', 'rollup:min']);
+gulp.task('default', gulp.parallel('build', 'rollup:min'));
