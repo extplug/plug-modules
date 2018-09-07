@@ -1,3 +1,10 @@
+import {
+  isArray,
+  isFunction,
+  isObject,
+  isString
+} from 'underscore';
+
 import match from './requirejs-finder/match';
 import fetch from './requirejs-finder/fetch';
 import after from './requirejs-finder/after';
@@ -34,14 +41,14 @@ function compose(...funcs) {
 
 export default {
   'uuid-js': match(m =>
-    _.isFunction(m.create) && _.isFunction(m.randomUI08)
+    isFunction(m.create) && isFunction(m.randomUI08)
   ),
   'plug/actions/Action': match(m =>
-    m.prototype && _.isFunction(m.prototype.alert) && _.isFunction(m.prototype.permissionAlert)
+    m.prototype && isFunction(m.prototype.alert) && isFunction(m.prototype.permissionAlert)
   ),
   'plug/actions/actionQueue': match(m =>
-    _.isArray(m.queue) && _.isFunction(m.add) && _.isFunction(m.append) &&
-      _.isFunction(m.next) && _.isFunction(m.complete)
+    isArray(m.queue) && isFunction(m.add) && isFunction(m.append) &&
+      isFunction(m.next) && isFunction(m.complete)
   ),
 
   'plug/actions/auth/AuthResetAction': matchAction('POST', 'auth/reset/me'),
@@ -107,28 +114,28 @@ export default {
   'plug/actions/rooms/SOSAction': matchAction('POST', 'rooms/sos'),
   'plug/actions/rooms/VoteAction': matchAction('POST', 'votes'),
   'plug/actions/soundcloud/SoundCloudSearchService': match(m =>
-    _.isFunction(m) && _.isFunction(m.prototype.onResolve) && _.isFunction(m.prototype.parse)
+    isFunction(m) && isFunction(m.prototype.onResolve) && isFunction(m.prototype.parse)
   ),
   'plug/actions/soundcloud/SoundCloudFavoritesService': match(m =>
-    _.isFunction(m) && _.isFunction(m.prototype.auth) &&
+    isFunction(m) && isFunction(m.prototype.auth) &&
       functionContains(m.prototype.load, '/me/favorites')
   ),
   'plug/actions/soundcloud/SoundCloudTracksService': match(m =>
-    _.isFunction(m) && _.isFunction(m.prototype.auth) &&
+    isFunction(m) && isFunction(m.prototype.auth) &&
       functionContains(m.prototype.load, '/me/tracks')
   ),
   'plug/actions/soundcloud/SoundCloudSetsService': match(m =>
-    _.isFunction(m) && _.isFunction(m.prototype.auth) &&
+    isFunction(m) && isFunction(m.prototype.auth) &&
       functionContains(m.prototype.load, '/me/playlists')
   ),
   'plug/actions/soundcloud/SoundCloudPermalinkService': match(m =>
-    _.isFunction(m) &&
-      _.isFunction(m.prototype.onComplete) &&
+    isFunction(m) &&
+      isFunction(m.prototype.onComplete) &&
       functionContains(m.prototype.onComplete, 'permalink_url')
   ),
   'plug/actions/soundcloud/SoundCloudUserTracksService': match(m =>
-    _.isFunction(m) &&
-      _.isFunction(m.prototype.onError) &&
+    isFunction(m) &&
+      isFunction(m.prototype.onError) &&
       functionContains(m.prototype.onError, 'SoundCloud User Tracks')
   ),
   'plug/actions/staff/StaffListAction': matchAction('GET', 'staff'),
@@ -151,87 +158,87 @@ export default {
   'plug/actions/users/SaveSettingsAction': matchAction('PUT', 'users/settings'),
   'plug/actions/users/SignupAction': matchAction('POST', 'users/signup'),
   'plug/actions/youtube/YouTubePlaylistService': match(m =>
-    _.isFunction(m) && _.isFunction(m.prototype.onChannel) &&
-      _.isFunction(m.prototype.loadLists)
+    isFunction(m) && isFunction(m.prototype.onChannel) &&
+      isFunction(m.prototype.loadLists)
   ),
   'plug/actions/youtube/YouTubeImportService': match(m =>
-    _.isFunction(m) && _.isFunction(m.prototype.onList) &&
-      _.isFunction(m.prototype.onVideos) &&
-      _.isFunction(m.prototype.loadNext)
+    isFunction(m) && isFunction(m.prototype.onList) &&
+      isFunction(m.prototype.onVideos) &&
+      isFunction(m.prototype.loadNext)
   ),
   'plug/actions/youtube/YouTubeSearchService': match(m =>
-    _.isFunction(m) && _.isFunction(m.prototype.onList) &&
-      _.isFunction(m.prototype.onVideos) &&
-      _.isFunction(m.prototype.loadRelated)
+    isFunction(m) && isFunction(m.prototype.onList) &&
+      isFunction(m.prototype.onVideos) &&
+      isFunction(m.prototype.loadRelated)
   ),
   'plug/actions/youtube/YouTubeSuggestService': match(m =>
-    _.isFunction(m) && functionContains(m.prototype.load, 'google.com/complete/search')
+    isFunction(m) && functionContains(m.prototype.load, 'google.com/complete/search')
   ),
 
   'plug/core/EventManager': match(m =>
-    _.isObject(m.eventTypeMap) && _.isObject(m.commandClassMap._map)
+    isObject(m.eventTypeMap) && isObject(m.commandClassMap._map)
   ),
-  'plug/core/Events': match(m => _.isFunction(m.dispatch) && m.dispatch.length === 1),
+  'plug/core/Events': match(m => isFunction(m.dispatch) && m.dispatch.length === 1),
   'plug/core/Class': match(m =>
-    _.isFunction(m) && _.isFunction(m.extend) && functionsSeemEqual(m, function () {})
+    isFunction(m) && isFunction(m.extend) && functionsSeemEqual(m, function () {})
   ),
   'plug/core/EventHandler': match(m =>
-    _.isFunction(m) && m.prototype &&
-      _.isFunction(m.prototype.dispatch) &&
-      _.isFunction(m.prototype.trigger) &&
-      _.isFunction(m.prototype.execute) &&
+    isFunction(m) && m.prototype &&
+      isFunction(m.prototype.dispatch) &&
+      isFunction(m.prototype.trigger) &&
+      isFunction(m.prototype.execute) &&
       // this is a bit lame, unfortunately plug.dj's "classes" don't publicly store their superclasses
       functionsSeemEqual(m.prototype.execute, function () { this.event = undefined, delete this.event })
   ),
   'plug/core/AsyncHandler': match(m =>
     // subclass of EventHandler
-    _.isFunction(m) && m.prototype.hasOwnProperty('listenTo') &&
+    isFunction(m) && m.prototype.hasOwnProperty('listenTo') &&
       m.prototype.hasOwnProperty('finish')
   ),
 
-  'plug/store/settings': match(m => _.isObject(m.settings)),
-  'plug/store/media': match(m => _.isFunction(m.deleteOrphans)),
-  'plug/store/compress': match(m => _.isFunction(m.compress)),
+  'plug/store/settings': match(m => isObject(m.settings)),
+  'plug/store/media': match(m => isFunction(m.deleteOrphans)),
+  'plug/store/compress': match(m => isFunction(m.compress)),
 
   'plug/lang/Lang': match(m => 'alerts' in m && 'addedToPlaylist' in m.alerts),
 
-  'plug/util/adblock': match(m => _.isFunction(m.check)),
-  'plug/util/analytics': match(m => _.isFunction(m.identify)),
+  'plug/util/adblock': match(m => isFunction(m.check)),
+  'plug/util/analytics': match(m => isFunction(m.identify)),
   'plug/util/API': match(m => 'WAIT_LIST_UPDATE' in m && 'CHAT_COMMAND' in m),
   'plug/util/audienceGrid': match(m =>
-    _.isFunction(m.defaultInvalidation) && _.isFunction(m.invalidateRoomElements)
+    isFunction(m.defaultInvalidation) && isFunction(m.invalidateRoomElements)
   ),
   'plug/util/AvatarManifest': match(m =>
-    _.isFunction(m.getAvatarUrl) && _.isFunction(m.getHitSlot)
+    isFunction(m.getAvatarUrl) && isFunction(m.getHitSlot)
   ),
   'plug/util/comparators': match(m =>
-    _.isFunction(m.uIndex) && _.isFunction(m.priority)
+    isFunction(m.uIndex) && isFunction(m.priority)
   ),
-  'plug/util/DateTime': match(m => _.isFunction(m.ServerDate)),
+  'plug/util/DateTime': match(m => isFunction(m.ServerDate)),
   'plug/util/Dictionary': match(m =>
-    m.prototype && m.prototype._map === null && _.isFunction(m.prototype.adopt)
+    m.prototype && m.prototype._map === null && isFunction(m.prototype.adopt)
   ),
-  'plug/util/emoji': match(m => _.isFunction(m.replace_emoticons)),
+  'plug/util/emoji': match(m => isFunction(m.replace_emoticons)),
   'plug/util/Environment': match(m => 'isChrome' in m && 'isAndroid' in m),
   'plug/util/Random': match(m =>
-    _.isFunction(m) && m.MASTER instanceof m && _.isFunction(m.MASTER.newSeed)
+    isFunction(m) && m.MASTER instanceof m && isFunction(m.MASTER.newSeed)
   ),
-  'plug/util/soundCloudSdkLoader': match(m => _.isFunction(m.g) && _.isString(m.id)),
-  'plug/util/tracker': match(m => _.isFunction(m.track) && m.tracker),
-  'plug/util/twitterWidgetLoader': match(m => m.f && _.isFunction(m.i)),
+  'plug/util/soundCloudSdkLoader': match(m => isFunction(m.g) && isString(m.id)),
+  'plug/util/tracker': match(m => isFunction(m.track) && m.tracker),
+  'plug/util/twitterWidgetLoader': match(m => m.f && isFunction(m.i)),
   'plug/util/urls': match(m => 'csspopout' in m && 'scThumbnail' in m),
   'plug/util/userSuggestion': match(m =>
-    _.isArray(m.groups) && _.isFunction(m.initGroups) && _.isFunction(m.lookup)
+    isArray(m.groups) && isFunction(m.initGroups) && isFunction(m.lookup)
   ),
-  'plug/util/util': match(m => _.isFunction(m.h2t)),
+  'plug/util/util': match(m => isFunction(m.h2t)),
   'plug/util/window': match(m => 'PLAYLIST_OFFSET' in m),
 
   'plug/server/request': match(m =>
-    !_.isFunction(m) && _.isFunction(m.execute) &&
+    !isFunction(m) && isFunction(m.execute) &&
       functionContains(m.execute, 'application/json')
   ),
   'plug/server/socketReceiver': match(m =>
-    _.isFunction(m.ack) && _.isFunction(m.plugUpdate)
+    isFunction(m.ack) && isFunction(m.plugUpdate)
   ),
 
   'plug/events/Event': matchEvent('Event'),
@@ -327,7 +334,7 @@ export default {
   'plug/handlers/WaitlistUnbanHandler': fetchHandler('ModerateEvent:unwaitlistban'),
 
   'plug/models/Avatar': match(m =>
-    m.AUDIENCE && m.DJ && _.isObject(m.IMAGES)
+    m.AUDIENCE && m.DJ && isObject(m.IMAGES)
   ),
   'plug/models/Badge': match(m =>
     hasDefaults(m, ['level', 'name', 'active']) && !('category' in m.prototype.defaults)
@@ -339,16 +346,16 @@ export default {
     hasAttributes(m, ['isLocked', 'shouldCycle'])
   ),
   'plug/models/currentMedia': match(m =>
-    _.isFunction(m.onMediaChange) && _.isFunction(m.onStartTimeChange)
+    isFunction(m.onMediaChange) && isFunction(m.onStartTimeChange)
   ),
   'plug/models/currentRoom': match(m =>
     m instanceof Backbone.Model && 'fx' in m.attributes
   ),
   'plug/models/currentScore': match(m =>
-    _.isFunction(m.vote) && _.isFunction(m.grab) && _.isFunction(m.advance)
+    isFunction(m.vote) && isFunction(m.grab) && isFunction(m.advance)
   ),
   'plug/models/currentUser': match(m =>
-    _.isArray(m._l) && _.isArray(m._x)
+    isArray(m._l) && isArray(m._x)
   ),
   'plug/models/HistoryEntry': match(m =>
     hasDefaults(m, ['timestamp', 'score'])
@@ -391,7 +398,7 @@ export default {
   ),
 
   'plug/collections/allAvatars': match(m =>
-    m instanceof Backbone.Collection && _.isFunction(m.__generate)
+    m instanceof Backbone.Collection && isFunction(m.__generate)
   ),
   'plug/collections/bannedUsers': depends(
     ['plug/models/BannedUser'],
@@ -406,7 +413,7 @@ export default {
   'plug/collections/currentPlaylistFiltered': depends(
     ['plug/models/Media'],
     Media => match(m =>
-      isCollectionOf(m, Media) && _.isFunction(m.setFilter) && _.isFunction(m.isActualFirst)
+      isCollectionOf(m, Media) && isFunction(m.setFilter) && isFunction(m.isActualFirst)
     )
   ),
   'plug/collections/dashboardRooms': depends(
@@ -433,10 +440,10 @@ export default {
     ['plug/models/User'],
     User => match(m =>
       isCollectionOf(m, User) &&
-        _.isFunction(m.onUsersAdd) &&
-        _.isFunction(m.lookup) &&
-        _.isFunction(m.onRemove) &&
-        _.isFunction(m.onAdd) &&
+        isFunction(m.onUsersAdd) &&
+        isFunction(m.lookup) &&
+        isFunction(m.onRemove) &&
+        isFunction(m.onAdd) &&
         'MAX' in m.constructor
     )
   ),
@@ -444,7 +451,7 @@ export default {
     ['plug/models/User'],
     User => match(m =>
       isCollectionOf(m, User) &&
-        _.isFunction(m.setFilter) &&
+        isFunction(m.setFilter) &&
         m.comparator === 'uIndex' &&
         // usersFiltered has a sourceCollection
         !('sourceCollection' in m)
@@ -464,11 +471,11 @@ export default {
   ),
   'plug/collections/myAvatars': depends(
     ['plug/models/Avatar'],
-    Avatar => match(m => isCollectionOf(m, Avatar) && _.isFunction(m.onChange))
+    Avatar => match(m => isCollectionOf(m, Avatar) && isFunction(m.onChange))
   ),
   'plug/collections/myBadges': depends(
     ['plug/models/Badge'],
-    Badge => match(m => isCollectionOf(m, Badge) && _.isFunction(m.onChange))
+    Badge => match(m => isCollectionOf(m, Badge) && isFunction(m.onChange))
   ),
   'plug/collections/notifications': depends(
     ['plug/models/Notification'],
@@ -477,7 +484,7 @@ export default {
   'plug/collections/playlists': depends(
     ['plug/models/Playlist'],
     Playlist => match(m =>
-      isCollectionOf(m, Playlist) && _.isFunction(m.jumpToMedia) && _.isArray(m.activeMedia)
+      isCollectionOf(m, Playlist) && isFunction(m.jumpToMedia) && isArray(m.activeMedia)
     )
   ),
   'plug/collections/playlistSearchResults': depends(
@@ -490,13 +497,13 @@ export default {
     ['plug/models/Avatar'],
     Avatar => match(m =>
       isCollectionOf(m, Avatar) &&
-        !_.isFunction(m.__generate) && // allAvatars
-        !_.isFunction(m.onChange) // myAvatars
+        !isFunction(m.__generate) && // allAvatars
+        !isFunction(m.onChange) // myAvatars
     )
   ),
   'plug/collections/purchasableBadges': depends(
     ['plug/models/Badge'],
-    Badge => match(m => isCollectionOf(m, Badge) && !_.isFunction(m.onChange)) // myBadges
+    Badge => match(m => isCollectionOf(m, Badge) && !isFunction(m.onChange)) // myBadges
   ),
   'plug/collections/restrictedMediaAlternatives': depends(
     ['plug/handlers/RestrictedSearchHandler', 'plug/models/Media'],
@@ -555,7 +562,7 @@ export default {
   'plug/collections/staffFiltered': depends(
     ['plug/models/User'],
     User => match(m =>
-      isCollectionOf(m, User) && _.isFunction(m.setFilter) && !('sourceCollection' in m)
+      isCollectionOf(m, User) && isFunction(m.setFilter) && !('sourceCollection' in m)
     )
   ),
   'plug/collections/storeExtras': depends(
@@ -577,12 +584,12 @@ export default {
     )
   ),
   'plug/collections/users': match(m =>
-    m instanceof Backbone.Collection && _.isFunction(m.getAudience)
+    m instanceof Backbone.Collection && isFunction(m.getAudience)
   ),
   'plug/collections/usersFiltered': depends(
     ['plug/models/User'],
     User => match(m =>
-      isCollectionOf(m, User) && _.isFunction(m.setFilter) && 'sourceCollection' in m
+      isCollectionOf(m, User) && isFunction(m.setFilter) && 'sourceCollection' in m
     )
   ),
   'plug/collections/waitlist': match(m =>
@@ -611,40 +618,40 @@ export default {
 
   // facades
   'plug/facades/chatFacade': match(m =>
-    _.isFunction(m.onChatReceived) && _.isFunction(m.checkMutes)
+    isFunction(m.onChatReceived) && isFunction(m.checkMutes)
   ),
   'plug/facades/dashboardRoomsFacade': match(m =>
-    _.isFunction(m.more) && _.isFunction(m.loadFavorites)
+    isFunction(m.more) && isFunction(m.loadFavorites)
   ),
   'plug/facades/importSoundCloudFacade': match(m =>
-    _.isFunction(m.importAllAlert) && _.isFunction(m.importSelectedAlert)
+    isFunction(m.importAllAlert) && isFunction(m.importSelectedAlert)
   ),
   'plug/facades/importYouTubeFacade': match(m =>
-    _.isFunction(m.importAlert) && _.isFunction(m.onImportMediaComplete)
+    isFunction(m.importAlert) && isFunction(m.onImportMediaComplete)
   ),
   'plug/facades/ImportMediaFacade': match(m =>
-    'instance' in m && _.isFunction(m.instance.onCIDResult)
+    'instance' in m && isFunction(m.instance.onCIDResult)
   ),
   'plug/facades/searchFacade': match(m =>
-    _.isFunction(m.appendUnknown) && _.isFunction(m.resetRelated)
+    isFunction(m.appendUnknown) && isFunction(m.resetRelated)
   ),
   'plug/facades/relatedMediaFacade': depends(
     ['plug/facades/searchFacade'],
     searchFacade => fetch(() => searchFacade)
   ),
   'plug/facades/remoteMediaFacade': match(m =>
-    _.isFunction(m.ytSearch) && _.isFunction(m.ytRelated) && _.isFunction(m.scPermalink)
+    isFunction(m.ytSearch) && isFunction(m.ytRelated) && isFunction(m.scPermalink)
   ),
   'plug/facades/playlistsSearchFacade': match(m =>
-    _.isFunction(m.setQuery) && _.isFunction(m.onHistory)
+    isFunction(m.setQuery) && isFunction(m.onHistory)
   ),
 
   // application views
   'plug/views/app/ApplicationView': match(m =>
-    m.prototype && m.prototype.el === 'body' && _.isFunction(m.prototype.showRoom)
+    m.prototype && m.prototype.el === 'body' && isFunction(m.prototype.showRoom)
   ),
   'plug/views/app/AppMenuView': match(m =>
-    m.prototype && m.prototype.id === 'app-menu' && _.isFunction(m.prototype.onLogoutClick)
+    m.prototype && m.prototype.id === 'app-menu' && isFunction(m.prototype.onLogoutClick)
   ),
 
   // dashboard
@@ -657,7 +664,7 @@ export default {
   'plug/views/dashboard/SearchView': depends(
     ['hbs!templates/dashboard/Search'],
     template => match(m =>
-      isView(m) && m.prototype.className === 'search' && _.isFunction(m.prototype.clear) &&
+      isView(m) && m.prototype.className === 'search' && isFunction(m.prototype.clear) &&
         m.prototype.template === template
     )
   ),
@@ -665,7 +672,7 @@ export default {
     isView(m) && m.prototype.id === 'tutorial'
   ),
   'plug/views/dashboard/list/CellView': match(m =>
-    isView(m) && _.isFunction(m.prototype.onFavorite) && _.isFunction(m.prototype.onFriends)
+    isView(m) && isFunction(m.prototype.onFavorite) && isFunction(m.prototype.onFriends)
   ),
   'plug/views/dashboard/list/GridView': depends(
     ['plug/views/dashboard/list/CellView'],
@@ -675,7 +682,7 @@ export default {
     )
   ),
   'plug/views/dashboard/list/TabMenuView': match(m =>
-    isView(m) && m.prototype.className === 'tab-menu' && _.isFunction(m.prototype.select)
+    isView(m) && m.prototype.className === 'tab-menu' && isFunction(m.prototype.select)
   ),
   'plug/views/dashboard/header/DashboardHeaderView': match(m =>
     isView(m) && m.prototype.className === 'app-header' &&
@@ -746,7 +753,7 @@ export default {
     isView(m) && m.prototype.id === 'toast-notifications'
   ),
   'plug/views/notifications/NotificationView': match(m =>
-    isView(m) && m.prototype.className === 'notification' && _.isFunction(m.prototype.slideDown)
+    isView(m) && m.prototype.className === 'notification' && isFunction(m.prototype.slideDown)
   ),
 
   // dialogs
@@ -754,7 +761,7 @@ export default {
     m.prototype && m.prototype.id === 'dialog-container'
   ),
   'plug/views/dialogs/Dialog': match(m =>
-    m.prototype && _.isFunction(m.prototype.onContainerClick)
+    m.prototype && isFunction(m.prototype.onContainerClick)
   ),
   'plug/views/dialogs/AlertDialog': match(m =>
     isDialog(m) && m.prototype.id === 'dialog-alert'
@@ -845,7 +852,7 @@ export default {
   ),
   'plug/views/playlists/help/PlaylistHelpView': match(m =>
     isView(m) && m.prototype.className === 'media-list' &&
-      _.isFunction(m.prototype.onResize) &&
+      isFunction(m.prototype.onResize) &&
       !('clear' in m.prototype)
   ),
   'plug/views/playlists/import/PlaylistImportPanelView': match(m =>
@@ -867,21 +874,21 @@ export default {
   ),
   'plug/views/playlists/media/headers/PlaylistMediaHeaderView': match(m =>
     isView(m) && m.prototype.className === 'header no-icon' &&
-      _.isFunction(m.prototype.onShuffleClick)
+      isFunction(m.prototype.onShuffleClick)
   ),
   'plug/views/playlists/media/headers/PlaylistSearchHeader': depends(
     ['hbs!templates/playlist/media/headers/SearchMediaHeader'],
     (render) => {
       const template = render();
       return match(m =>
-        isView(m) && !_.isFunction(m.prototype.onQueryUpdate) &&
+        isView(m) && !isFunction(m.prototype.onQueryUpdate) &&
           m.prototype.template === template
       );
     }
   ),
   'plug/views/playlists/media/headers/SearchRelatedHeader': match(m =>
     isView(m) && m.prototype.className === 'header with-back' &&
-      _.isFunction(m.prototype.onBackClick)
+      isFunction(m.prototype.onBackClick)
   ),
   'plug/views/playlists/media/headers/YouTubePlaylistsHeader': depends(
     ['hbs!templates/playlist/media/headers/YouTubeImportHeader', 'lang/Lang'],
@@ -905,9 +912,9 @@ export default {
   ),
   'plug/views/playlists/media/headers/YouTubeMediaHeader': match(m =>
     isView(m) && m.prototype.className === 'header import-with-back' &&
-      _.isFunction(m.prototype.onImportClick) &&
-      _.isFunction(m.prototype.onImport) &&
-      _.isFunction(m.prototype.onBackClick)
+      isFunction(m.prototype.onImportClick) &&
+      isFunction(m.prototype.onImport) &&
+      isFunction(m.prototype.onBackClick)
   ),
   'plug/views/playlists/media/headers/SoundCloudSetsHeader': depends(
     ['hbs!templates/playlist/media/headers/ImportSoundCloudSetsHeader', 'lang/Lang'],
@@ -915,7 +922,7 @@ export default {
       const template = render(Lang);
       return match(m =>
         isView(m) && m.prototype.className === 'header import' &&
-          _.isFunction(m.prototype.onImportClick) &&
+          isFunction(m.prototype.onImportClick) &&
           m.prototype.template === template
       );
     }
@@ -925,7 +932,7 @@ export default {
     (render) => {
       const template = render();
       return match(m =>
-        isView(m) && _.isFunction(m.prototype.onQueryUpdate) &&
+        isView(m) && isFunction(m.prototype.onQueryUpdate) &&
           m.prototype.template === template
       );
     }
@@ -933,9 +940,9 @@ export default {
   // iffy naming below:
   'plug/views/playlists/media/headers/SoundCloudMediaHeader': match(m =>
     isView(m) && m.prototype.className === 'header import-with-back' &&
-      _.isFunction(m.prototype.onImportClick) &&
-      !_.isFunction(m.prototype.onImport) &&
-      _.isFunction(m.prototype.onBackClick)
+      isFunction(m.prototype.onImportClick) &&
+      !isFunction(m.prototype.onImport) &&
+      isFunction(m.prototype.onBackClick)
   ),
   'plug/views/playlists/media/headers/SoundCloudTracksHeader': depends(
     ['hbs!templates/playlist/media/headers/ImportSoundCloudHeader', 'lang/Lang'],
@@ -943,7 +950,7 @@ export default {
       const template = render(Lang);
       return match(m =>
         isView(m) && m.prototype.className === 'header import' &&
-          _.isFunction(m.prototype.onImportClick) &&
+          isFunction(m.prototype.onImportClick) &&
           m.prototype.template === template
       );
     }
@@ -1007,7 +1014,7 @@ export default {
     ['plug/collections/restrictedMediaAlternatives'],
     restrictedMediaAlternatives => match(m =>
       isView(m) && m.prototype.collection === restrictedMediaAlternatives &&
-        _.isFunction(m.prototype.showLoadSpinner)
+        isFunction(m.prototype.showLoadSpinner)
     )
   ),
   'plug/views/playlists/media/panels/RestrictedMediaAlternativesRowView': depends(
@@ -1063,10 +1070,10 @@ export default {
     m instanceof Backbone.View && m.id === 'playlist-menu'
   ),
   'plug/views/playlists/menu/PlaylistRowView': match(m =>
-    isView(m) && m.prototype.className === 'row' && _.isFunction(m.prototype.onSyncingChange)
+    isView(m) && m.prototype.className === 'row' && isFunction(m.prototype.onSyncingChange)
   ),
   'plug/views/playlists/search/SearchMenuView': match(m =>
-    isView(m) && m.prototype.id === 'search-menu' && _.isFunction(m.prototype.onYouTubeClick)
+    isView(m) && m.prototype.id === 'search-menu' && isFunction(m.prototype.onYouTubeClick)
   ),
   'plug/views/playlists/search/SearchSuggestionView': match(m =>
     isView(m) && m.prototype.id === 'search-suggestion'
@@ -1182,7 +1189,7 @@ export default {
     ['plug/views/users/inventory/InventoryView'],
     InventoryView => match((m, name, context) =>
       isView(m) && m.prototype.className === 'cell' &&
-        _.isFunction(m.prototype.getBlinkFrame) &&
+        isFunction(m.prototype.getBlinkFrame) &&
         context.isInSameNamespace(name, 'plug/views/users/inventory/InventoryView')
     )
   ),
@@ -1383,7 +1390,7 @@ export default {
   ),
   'plug/views/rooms/walkthrough/GuestWalkthroughView': match(m =>
     isView(m) && m.prototype.id === 'walkthrough' &&
-      _.isFunction(m.prototype.fadeIn)
+      isFunction(m.prototype.fadeIn)
   ),
   'plug/views/rooms/walkthrough/UserWalkthroughView': match(m =>
     isView(m) && m.prototype.id === 'walkthrough' &&
@@ -1431,8 +1438,8 @@ export default {
     ['plug/views/rooms/users/FriendsListView'],
     () => match((m, name, context) =>
       isView(m) && m.prototype.className === 'row' &&
-        _.isFunction(m.prototype.onAvatarChange) &&
-        _.isFunction(m.prototype.onStatusChange) &&
+        isFunction(m.prototype.onAvatarChange) &&
+        isFunction(m.prototype.onStatusChange) &&
         context.isInSameNamespace(name, 'plug/views/rooms/users/FriendsListView')
     )
   ),
@@ -1482,7 +1489,7 @@ export default {
   ),
   'plug/views/rooms/users/WaitListRowView': match(m =>
     isView(m) && m.prototype.className === 'user' &&
-      _.isFunction(m.prototype.onRemoveClick)
+      isFunction(m.prototype.onRemoveClick)
   ),
   'plug/views/rooms/chat/ChatView': match(m =>
     isView(m) && m.prototype.id === 'chat'

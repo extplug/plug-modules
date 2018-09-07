@@ -1,3 +1,5 @@
+import { isFunction } from 'underscore';
+
 // Tests if an object is a Backbone collection of a certain type of Model.
 export function isCollectionOf(m, Model) {
   return Model && m instanceof Backbone.Collection && m.model === Model;
@@ -23,12 +25,12 @@ export function functionsSeemEqual(a, b) {
 
 // Checks if a function's source contains a given string.
 export function functionContains(fn, match) {
-  return _.isFunction(fn) && fn.toString().indexOf(match) !== -1;
+  return isFunction(fn) && fn.toString().indexOf(match) !== -1;
 }
 
 // Checks if a given object looks like a Backbone View class.
 export function isView(m) {
-  return m.prototype && _.isFunction(m.prototype.render) && _.isFunction(m.prototype.$);
+  return m.prototype && isFunction(m.prototype.render) && isFunction(m.prototype.$);
 }
 
 // Checks if a given Backbone Model class has a defaults property (plug.dj models).
