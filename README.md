@@ -24,7 +24,7 @@ to load plug-modules correctly, and then simply `require()` the stuff you need:
 ```js
 requirejs.config({
   paths: {
-    'plug-modules': 'https://unpkg.com/plug-modules/plug-modules'
+    'plug-modules': 'https://unpkg.com/plug-modules@6'
   }
 });
 
