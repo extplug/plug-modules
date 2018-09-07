@@ -5,15 +5,18 @@ const uglify = require('gulp-uglify');
 const rename = require('gulp-rename');
 const rollup = require('rollup').rollup;
 const rollupBabel = require('rollup-plugin-babel');
-const generateMatchFiles = require('./tools/extract-matchers-files');
 
 const babelConfig = {
   presets: [
-    ['env', { loose: true, modules: false }],
+    ['@babel/preset-env', {
+      loose: true,
+      modules: false
+    }]
   ],
   plugins: [
-    'transform-export-extensions',
-  ],
+    '@babel/plugin-proposal-export-default-from',
+    '@babel/plugin-proposal-export-namespace-from'
+  ]
 };
 
 gulp.task('clean', () => del([
@@ -26,7 +29,7 @@ gulp.task('build', () =>
     .pipe(babel(babelConfig))
     .pipe(gulp.dest('./es'))
     .pipe(babel({
-      plugins: ['transform-es2015-modules-commonjs'],
+      plugins: ['@babel/plugin-transform-modules-commonjs'],
     }))
     .pipe(gulp.dest('./lib'))
 );
