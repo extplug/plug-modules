@@ -21,6 +21,7 @@ import {
   functionsSeemEqual,
   hasAttributes,
   hasDefaults,
+  isConstructor,
   isCollectionOf,
   isDialog,
   isView,
@@ -114,27 +115,27 @@ export default {
   'plug/actions/rooms/SOSAction': matchAction('POST', 'rooms/sos'),
   'plug/actions/rooms/VoteAction': matchAction('POST', 'votes'),
   'plug/actions/soundcloud/SoundCloudSearchService': match(m =>
-    isFunction(m) && isFunction(m.prototype.onResolve) && isFunction(m.prototype.parse)
+    isConstructor(m) && isFunction(m.prototype.onResolve) && isFunction(m.prototype.parse)
   ),
   'plug/actions/soundcloud/SoundCloudFavoritesService': match(m =>
-    isFunction(m) && isFunction(m.prototype.auth) &&
+    isConstructor(m) && isFunction(m.prototype.auth) &&
       functionContains(m.prototype.load, '/me/favorites')
   ),
   'plug/actions/soundcloud/SoundCloudTracksService': match(m =>
-    isFunction(m) && isFunction(m.prototype.auth) &&
+    isConstructor(m) && isFunction(m.prototype.auth) &&
       functionContains(m.prototype.load, '/me/tracks')
   ),
   'plug/actions/soundcloud/SoundCloudSetsService': match(m =>
-    isFunction(m) && isFunction(m.prototype.auth) &&
+    isConstructor(m) && isFunction(m.prototype.auth) &&
       functionContains(m.prototype.load, '/me/playlists')
   ),
   'plug/actions/soundcloud/SoundCloudPermalinkService': match(m =>
-    isFunction(m) &&
+    isConstructor(m) &&
       isFunction(m.prototype.onComplete) &&
       functionContains(m.prototype.onComplete, 'permalink_url')
   ),
   'plug/actions/soundcloud/SoundCloudUserTracksService': match(m =>
-    isFunction(m) &&
+    isConstructor(m) &&
       isFunction(m.prototype.onError) &&
       functionContains(m.prototype.onError, 'SoundCloud User Tracks')
   ),
@@ -158,21 +159,21 @@ export default {
   'plug/actions/users/SaveSettingsAction': matchAction('PUT', 'users/settings'),
   'plug/actions/users/SignupAction': matchAction('POST', 'users/signup'),
   'plug/actions/youtube/YouTubePlaylistService': match(m =>
-    isFunction(m) && isFunction(m.prototype.onChannel) &&
+    isConstructor(m) && isFunction(m.prototype.onChannel) &&
       isFunction(m.prototype.loadLists)
   ),
   'plug/actions/youtube/YouTubeImportService': match(m =>
-    isFunction(m) && isFunction(m.prototype.onList) &&
+    isConstructor(m) && isFunction(m.prototype.onList) &&
       isFunction(m.prototype.onVideos) &&
       isFunction(m.prototype.loadNext)
   ),
   'plug/actions/youtube/YouTubeSearchService': match(m =>
-    isFunction(m) && isFunction(m.prototype.onList) &&
+    isConstructor(m) && isFunction(m.prototype.onList) &&
       isFunction(m.prototype.onVideos) &&
       isFunction(m.prototype.loadRelated)
   ),
   'plug/actions/youtube/YouTubeSuggestService': match(m =>
-    isFunction(m) && functionContains(m.prototype.load, 'google.com/complete/search')
+    isConstructor(m) && functionContains(m.prototype.load, 'google.com/complete/search')
   ),
 
   'plug/core/EventManager': match(m =>
@@ -180,10 +181,10 @@ export default {
   ),
   'plug/core/Events': match(m => isFunction(m.dispatch) && m.dispatch.length === 1),
   'plug/core/Class': match(m =>
-    isFunction(m) && isFunction(m.extend) && functionsSeemEqual(m, function () {})
+    isConstructor(m) && isFunction(m.extend) && functionsSeemEqual(m, function () {})
   ),
   'plug/core/EventHandler': match(m =>
-    isFunction(m) && m.prototype &&
+    isConstructor(m) && m.prototype &&
       isFunction(m.prototype.dispatch) &&
       isFunction(m.prototype.trigger) &&
       isFunction(m.prototype.execute) &&
@@ -192,7 +193,7 @@ export default {
   ),
   'plug/core/AsyncHandler': match(m =>
     // subclass of EventHandler
-    isFunction(m) && m.prototype.hasOwnProperty('listenTo') &&
+    isConstructor(m) && m.prototype.hasOwnProperty('listenTo') &&
       m.prototype.hasOwnProperty('finish')
   ),
 
@@ -221,7 +222,7 @@ export default {
   'plug/util/emoji': match(m => isFunction(m.replace_emoticons)),
   'plug/util/Environment': match(m => 'isChrome' in m && 'isAndroid' in m),
   'plug/util/Random': match(m =>
-    isFunction(m) && m.MASTER instanceof m && isFunction(m.MASTER.newSeed)
+    isConstructor(m) && m.MASTER instanceof m && isFunction(m.MASTER.newSeed)
   ),
   'plug/util/soundCloudSdkLoader': match(m => isFunction(m.g) && isString(m.id)),
   'plug/util/tracker': match(m => isFunction(m.track) && m.tracker),
@@ -234,7 +235,7 @@ export default {
   'plug/util/window': match(m => 'PLAYLIST_OFFSET' in m),
 
   'plug/server/request': match(m =>
-    !isFunction(m) && isFunction(m.execute) &&
+    !isConstructor(m) && isFunction(m.execute) &&
       functionContains(m.execute, 'application/json')
   ),
   'plug/server/socketReceiver': match(m =>

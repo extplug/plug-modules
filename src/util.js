@@ -1,4 +1,9 @@
-import { isFunction } from 'underscore';
+import { isFunction, isObject } from 'underscore';
+
+// Checks if an object is a function that has a prototype and can be `new`-ed.
+export function isConstructor (fn) {
+  return isFunction(fn) && isObject(fn.prototype);
+}
 
 // Tests if an object is a Backbone collection of a certain type of Model.
 export function isCollectionOf(m, Model) {
