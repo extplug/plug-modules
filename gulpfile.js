@@ -18,17 +18,10 @@ const babelConfig = {
 
 gulp.task('clean', () => del([
   './es',
-  './lib',
-  './src/plug/*',
-  '!./src/plug/_contextRequire.js'
+  './lib'
 ]));
 
-gulp.task('generate:imports', () => {
-  // Sync :x
-  generateMatchFiles();
-});
-
-gulp.task('build', ['generate:imports'], () =>
+gulp.task('build', () =>
   gulp.src('./src/**/*.js')
     .pipe(babel(babelConfig))
     .pipe(gulp.dest('./es'))
