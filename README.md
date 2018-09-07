@@ -65,7 +65,7 @@ currentUser.set('gRole', 5);
 See the Wiki for more examples!
 
 `plugModules.require()` modules in your browser's developer console or
-use [replug](https://github.com/PlugLynn/replug) to figure out what the
+use [replug](https://github.com/extplug/replug) to figure out what the
 different modules are for, and what you can do with/to them.
 
 ## API
