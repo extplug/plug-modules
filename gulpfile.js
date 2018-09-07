@@ -40,13 +40,11 @@ gulp.task('rollup', () =>
     plugins: [
       rollupBabel(babelConfig),
     ],
+    external: ['underscore'],
   }).then(bundle => bundle.write({
     file: './lib/browser.js',
-    format: 'umd',
+    format: 'amd',
     name: 'plug-modules',
-    globals: {
-      underscore: '_',
-    },
   }))
 );
 
